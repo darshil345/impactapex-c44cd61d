@@ -1,20 +1,26 @@
 import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { mockSchools, criteria, freeCriteria } from '@/lib/mockData';
+import { mockSchools, criteria, freeCriteria, School } from '@/lib/mockData';
 import { useTier } from '@/contexts/TierContext';
 import { cn } from '@/lib/utils';
 
-export function ScoreChart() {
+interface ScoreChartProps {
+  schools?: School[];
+}
+
+export function ScoreChart({ schools }: ScoreChartProps) {
   const { canAccess } = useTier();
   const hasAllCriteria = canAccess('allCriteria');
+
+  const dataSource = schools || mockSchools;
 
   const chartData = useMemo(() => {
     const activeCriteria = hasAllCriteria ? criteria : criteria.filter(c => freeCriteria.includes(c.key));
     
     return activeCriteria.map(criterion => {
-      const avgScore = mockSchools.reduce((acc, school) => {
+      const avgScore = dataSource.reduce((acc, school) => {
         return acc + (school[criterion.key as keyof typeof school] as number);
-      }, 0) / mockSchools.length;
+      }, 0) / dataSource.length;
       
       return {
         name: criterion.label,
@@ -22,7 +28,7 @@ export function ScoreChart() {
         color: criterion.color,
       };
     });
-  }, [hasAllCriteria]);
+  }, [hasAllCriteria, dataSource]);
 
   return (
     <div className="bg-card rounded-2xl border shadow-sm p-5">

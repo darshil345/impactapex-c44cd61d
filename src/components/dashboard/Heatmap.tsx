@@ -1,10 +1,14 @@
 import { useMemo } from 'react';
-import { mockSchools, criteria } from '@/lib/mockData';
+import { mockSchools, criteria, School } from '@/lib/mockData';
 import { useTier } from '@/contexts/TierContext';
 import { LockedFeature } from '@/components/LockedFeature';
 import { cn } from '@/lib/utils';
 
-export function Heatmap() {
+interface HeatmapProps {
+  schools?: School[];
+}
+
+export function Heatmap({ schools: schoolsProp }: HeatmapProps) {
   const { canAccess } = useTier();
   const hasHeatmap = canAccess('heatmap');
 
@@ -16,7 +20,8 @@ export function Heatmap() {
     return 'bg-destructive/40';
   };
 
-  const schools = mockSchools.slice(0, 8);
+  const dataSource = schoolsProp || mockSchools;
+  const schools = dataSource.slice(0, 8);
 
   const content = (
     <div className="bg-card rounded-2xl border shadow-sm p-5">
