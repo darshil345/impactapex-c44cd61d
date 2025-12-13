@@ -14,7 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      schools: {
+        Row: {
+          avg_score: number | null
+          community_problem: string | null
+          community_score: number | null
+          community_solution: string | null
+          country: string
+          country_code: string
+          created_at: string
+          global_awareness_problem: string | null
+          global_awareness_score: number | null
+          global_awareness_solution: string | null
+          id: string
+          innovation_problem: string | null
+          innovation_score: number | null
+          innovation_solution: string | null
+          name: string
+          region: string | null
+          sustainability_problem: string | null
+          sustainability_score: number | null
+          sustainability_solution: string | null
+          trend: string | null
+          trend_value: number | null
+          updated_at: string
+          wellbeing_problem: string | null
+          wellbeing_score: number | null
+          wellbeing_solution: string | null
+        }
+        Insert: {
+          avg_score?: number | null
+          community_problem?: string | null
+          community_score?: number | null
+          community_solution?: string | null
+          country: string
+          country_code: string
+          created_at?: string
+          global_awareness_problem?: string | null
+          global_awareness_score?: number | null
+          global_awareness_solution?: string | null
+          id?: string
+          innovation_problem?: string | null
+          innovation_score?: number | null
+          innovation_solution?: string | null
+          name: string
+          region?: string | null
+          sustainability_problem?: string | null
+          sustainability_score?: number | null
+          sustainability_solution?: string | null
+          trend?: string | null
+          trend_value?: number | null
+          updated_at?: string
+          wellbeing_problem?: string | null
+          wellbeing_score?: number | null
+          wellbeing_solution?: string | null
+        }
+        Update: {
+          avg_score?: number | null
+          community_problem?: string | null
+          community_score?: number | null
+          community_solution?: string | null
+          country?: string
+          country_code?: string
+          created_at?: string
+          global_awareness_problem?: string | null
+          global_awareness_score?: number | null
+          global_awareness_solution?: string | null
+          id?: string
+          innovation_problem?: string | null
+          innovation_score?: number | null
+          innovation_solution?: string | null
+          name?: string
+          region?: string | null
+          sustainability_problem?: string | null
+          sustainability_score?: number | null
+          sustainability_solution?: string | null
+          trend?: string | null
+          trend_value?: number | null
+          updated_at?: string
+          wellbeing_problem?: string | null
+          wellbeing_score?: number | null
+          wellbeing_solution?: string | null
+        }
+        Relationships: []
+      }
+      sync_logs: {
+        Row: {
+          error_message: string | null
+          id: string
+          records_synced: number | null
+          source: string | null
+          status: string | null
+          synced_at: string
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          records_synced?: number | null
+          source?: string | null
+          status?: string | null
+          synced_at?: string
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          records_synced?: number | null
+          source?: string | null
+          status?: string | null
+          synced_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
