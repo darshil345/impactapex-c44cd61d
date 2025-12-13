@@ -8,17 +8,20 @@ import { Trophy, TrendingUp, TrendingDown, Minus, Medal, ChevronRight } from 'lu
 interface LeaderboardProps {
   onSchoolClick: (school: School) => void;
   selectedSchool?: School | null;
+  schools?: School[];
 }
 
-export function Leaderboard({ onSchoolClick, selectedSchool }: LeaderboardProps) {
+export function Leaderboard({ onSchoolClick, selectedSchool, schools }: LeaderboardProps) {
   const { canAccess, features } = useTier();
   const hasLeaderboard = canAccess('leaderboard');
 
+  const dataSource = schools || mockSchools;
+
   const rankedSchools = useMemo(() => {
-    return [...mockSchools]
+    return [...dataSource]
       .sort((a, b) => b.avgScore - a.avgScore)
       .slice(0, hasLeaderboard ? 10 : features.maxSchools);
-  }, [hasLeaderboard, features.maxSchools]);
+  }, [hasLeaderboard, features.maxSchools, dataSource]);
 
   const TrendIcon = ({ trend }: { trend: string }) => {
     if (trend === 'up') return <TrendingUp className="h-3.5 w-3.5 text-primary" />;

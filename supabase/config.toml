@@ -1,1 +1,4 @@
 project_id = "fqgpxhuwvtvhhtoteodw"
+
+[functions.sync-google-sheets]
+verify_jwt = false
