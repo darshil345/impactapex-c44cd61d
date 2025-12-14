@@ -15,17 +15,17 @@ import {
   Download,
   Trash2,
   ChevronRight,
-  Loader2,
-  X
+  Loader2
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useSyncSchools, useSyncLogs, useSchools } from '@/hooks/useSchools';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/hooks/useTheme';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SettingsSectionProps {
@@ -153,7 +153,7 @@ function AIModal({
 }
 
 function SettingsContent() {
-  const [darkMode, setDarkMode] = useState(false);
+  const { isDark, setTheme } = useTheme();
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [weeklyDigest, setWeeklyDigest] = useState(true);
   const [autoSync, setAutoSync] = useState(false);
@@ -371,7 +371,7 @@ function SettingsContent() {
             <SettingsRow label="Dark Mode" description="Toggle dark theme">
               <div className="flex items-center gap-2">
                 <Sun className="h-4 w-4 text-muted-foreground" />
-                <Switch checked={darkMode} onCheckedChange={setDarkMode} />
+                <Switch checked={isDark} onCheckedChange={setTheme} />
                 <Moon className="h-4 w-4 text-muted-foreground" />
               </div>
             </SettingsRow>
