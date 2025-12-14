@@ -8,7 +8,7 @@ import { InsightEngine } from '@/components/dashboard/InsightEngine';
 import { SchoolProfile } from '@/components/dashboard/SchoolProfile';
 import { TierSelector } from '@/components/dashboard/TierSelector';
 import { Heatmap } from '@/components/dashboard/Heatmap';
-import { mockSchools, School } from '@/lib/mockData';
+import { School } from '@/lib/mockData';
 import { TierProvider } from '@/contexts/TierContext';
 import { Trophy, TrendingUp, Target, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react';
 import { useSchools, useSyncSchools } from '@/hooks/useSchools';
@@ -19,12 +19,12 @@ function Dashboard() {
   const [comparisonSchools, setComparisonSchools] = useState<School[]>([]);
   const { toast } = useToast();
   
-  // Fetch schools from database
+  // Fetch schools from database only - no mock data fallback
   const { data: dbSchools, isLoading, error } = useSchools();
   const syncMutation = useSyncSchools();
   
-  // Use database schools if available, otherwise fall back to mock data
-  const schools = dbSchools && dbSchools.length > 0 ? dbSchools : mockSchools;
+  // Only use database schools
+  const schools = dbSchools || [];
 
   const handleSchoolClick = (school: School) => {
     if (comparisonSchools.find(s => s.id === school.id)) {
@@ -55,6 +55,10 @@ function Dashboard() {
   };
 
   const kpiData = useMemo(() => {
+    if (schools.length === 0) {
+      return { topSchool: null, mostImproved: null, strongestCriteria: null, weakestCriteria: null };
+    }
+    
     const sorted = [...schools].sort((a, b) => b.avgScore - a.avgScore);
     const topSchool = sorted[0];
     const mostImproved = [...schools].sort((a, b) => b.trendValue - a.trendValue)[0];
@@ -77,6 +81,34 @@ function Dashboard() {
   const formatCriteriaName = (key: string) => {
     return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
   };
+
+  if (!isLoading && schools.length === 0) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
+          <div className="p-4 rounded-full bg-primary/10">
+            <RefreshCw className="h-8 w-8 text-primary" />
+          </div>
+          <h2 className="text-xl font-display font-bold">No Schools Data</h2>
+          <p className="text-muted-foreground max-w-md">
+            Click the button below to sync school data from your Google Sheet.
+          </p>
+          <button 
+            onClick={handleSync}
+            disabled={syncMutation.isPending}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium transition-colors disabled:opacity-50"
+          >
+            {syncMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            {syncMutation.isPending ? 'Syncing...' : 'Sync Data from Google Sheets'}
+          </button>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
