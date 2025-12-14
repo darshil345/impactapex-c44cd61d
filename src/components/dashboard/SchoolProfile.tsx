@@ -4,13 +4,15 @@ import { X, MapPin, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2
 import { cn } from '@/lib/utils';
 
 interface SchoolProfileProps {
-  school: School;
+  school: School | null;
   onClose: () => void;
 }
 
 export function SchoolProfile({ school, onClose }: SchoolProfileProps) {
   const { currentTier } = useTier();
   const isPro = currentTier === 'pro' || currentTier === 'enterprise';
+
+  if (!school) return null;
 
   const TrendIcon = school.trend === 'up' ? TrendingUp : school.trend === 'down' ? TrendingDown : Minus;
   const trendColor = school.trend === 'up' ? 'text-primary' : school.trend === 'down' ? 'text-destructive' : 'text-muted-foreground';
