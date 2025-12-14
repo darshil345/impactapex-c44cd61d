@@ -9,30 +9,31 @@ export interface DbSchool {
   country: string;
   country_code: string;
   region: string | null;
-  sustainability_score: number;
+  sustainability_score: number | null;
   sustainability_problem: string | null;
   sustainability_solution: string | null;
-  community_score: number;
+  community_score: number | null;
   community_problem: string | null;
   community_solution: string | null;
-  wellbeing_score: number;
+  wellbeing_score: number | null;
   wellbeing_problem: string | null;
   wellbeing_solution: string | null;
-  innovation_score: number;
+  innovation_score: number | null;
   innovation_problem: string | null;
   innovation_solution: string | null;
-  global_awareness_score: number;
+  global_awareness_score: number | null;
   global_awareness_problem: string | null;
   global_awareness_solution: string | null;
-  avg_score: number;
-  trend: string;
-  trend_value: number;
+  avg_score: number | null;
+  trend: string | null;
+  trend_value: number | null;
   created_at: string;
   updated_at: string;
 }
 
 // Transform database school to app School type
 export function transformDbSchool(dbSchool: DbSchool): School {
+  const trend = dbSchool.trend as 'up' | 'down' | 'stable' | null;
   return {
     id: dbSchool.id,
     name: dbSchool.name,
@@ -40,15 +41,15 @@ export function transformDbSchool(dbSchool: DbSchool): School {
     countryCode: dbSchool.country_code,
     region: dbSchool.region || '',
     type: 'K-12',
-    sustainability: dbSchool.sustainability_score,
-    communityEngagement: dbSchool.community_score,
-    wellbeing: dbSchool.wellbeing_score,
-    innovation: dbSchool.innovation_score,
-    globalAwareness: dbSchool.global_awareness_score,
+    sustainability: dbSchool.sustainability_score ?? 0,
+    communityEngagement: dbSchool.community_score ?? 0,
+    wellbeing: dbSchool.wellbeing_score ?? 0,
+    innovation: dbSchool.innovation_score ?? 0,
+    globalAwareness: dbSchool.global_awareness_score ?? 0,
     academicExcellence: 0, // Not in DB, default to 0
-    avgScore: dbSchool.avg_score,
-    trend: dbSchool.trend as 'up' | 'down' | 'stable',
-    trendValue: dbSchool.trend_value,
+    avgScore: dbSchool.avg_score ?? 0,
+    trend: trend ?? 'stable',
+    trendValue: dbSchool.trend_value ?? 0,
     problems: [
       dbSchool.sustainability_problem,
       dbSchool.community_problem,
