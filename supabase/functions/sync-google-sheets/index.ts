@@ -9,7 +9,21 @@ const corsHeaders = {
 const SHEET_ID = '1vF9F08dNRXq-xToR3fsL0_2yFTtKMsWbLoz-2xD5tvA'
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`
 
-interface SheetRow {
+interface CsvRow {
+  schoolId: string
+  schoolName: string
+  country: string
+  schoolType: string
+  criteria: string
+  indicator: string
+  score: number
+  status: string
+  trend: string
+  problem: string
+  solution: string
+}
+
+interface SchoolData {
   name: string
   country: string
   countryCode: string
@@ -33,14 +47,66 @@ interface SheetRow {
   trendValue: number
 }
 
-function parseCSV(csvText: string): SheetRow[] {
+// Map country to country code
+function getCountryCode(country: string): string {
+  const countryMap: Record<string, string> = {
+    'india': 'IN',
+    'singapore': 'SG',
+    'usa': 'US',
+    'uk': 'GB',
+    'switzerland': 'CH',
+    'germany': 'DE',
+    'france': 'FR',
+    'japan': 'JP',
+    'australia': 'AU',
+    'canada': 'CA',
+    'china': 'CN',
+    'brazil': 'BR',
+    'south africa': 'ZA',
+    'uae': 'AE',
+    'netherlands': 'NL',
+    'spain': 'ES',
+    'italy': 'IT',
+    'sweden': 'SE',
+    'norway': 'NO',
+    'denmark': 'DK',
+    'finland': 'FI',
+  }
+  return countryMap[country.toLowerCase()] || 'XX'
+}
+
+// Map criteria name to our category
+function mapCriteria(criteria: string): string {
+  const lower = criteria.toLowerCase()
+  if (lower.includes('sustainab') || lower.includes('carbon') || lower.includes('recycl') || lower.includes('environment')) {
+    return 'sustainability'
+  }
+  if (lower.includes('community') || lower.includes('volunteer') || lower.includes('engagement')) {
+    return 'community'
+  }
+  if (lower.includes('wellbeing') || lower.includes('mental') || lower.includes('health') || lower.includes('physical')) {
+    return 'wellbeing'
+  }
+  if (lower.includes('innovation') || lower.includes('academic') || lower.includes('steam') || lower.includes('project') || lower.includes('learning')) {
+    return 'innovation'
+  }
+  if (lower.includes('global') || lower.includes('international') || lower.includes('exchange') || lower.includes('diversity') || lower.includes('inclusion')) {
+    return 'globalAwareness'
+  }
+  if (lower.includes('leadership') || lower.includes('student council') || lower.includes('initiative')) {
+    return 'innovation' // Map leadership to innovation
+  }
+  return 'globalAwareness' // Default
+}
+
+function parseCSV(csvText: string): CsvRow[] {
   const lines = csvText.split('\n')
   if (lines.length < 2) return []
 
-  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, '').toLowerCase())
   console.log('CSV Headers:', headers)
 
-  const rows: SheetRow[] = []
+  const rows: CsvRow[] = []
 
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim()
@@ -63,35 +129,115 @@ function parseCSV(csvText: string): SheetRow[] {
     }
     values.push(current.trim())
 
-    if (values.length >= 2) {
-      const row: SheetRow = {
-        name: values[0] || '',
-        country: values[1] || '',
-        countryCode: values[2] || 'XX',
-        region: values[3] || '',
-        sustainabilityScore: parseFloat(values[4]) || 0,
-        sustainabilityProblem: values[5] || '',
-        sustainabilitySolution: values[6] || '',
-        communityScore: parseFloat(values[7]) || 0,
-        communityProblem: values[8] || '',
-        communitySolution: values[9] || '',
-        wellbeingScore: parseFloat(values[10]) || 0,
-        wellbeingProblem: values[11] || '',
-        wellbeingSolution: values[12] || '',
-        innovationScore: parseFloat(values[13]) || 0,
-        innovationProblem: values[14] || '',
-        innovationSolution: values[15] || '',
-        globalAwarenessScore: parseFloat(values[16]) || 0,
-        globalAwarenessProblem: values[17] || '',
-        globalAwarenessSolution: values[18] || '',
-        trend: values[19] || 'stable',
-        trendValue: parseFloat(values[20]) || 0,
+    if (values.length >= 7 && values[0] && values[1]) {
+      const row: CsvRow = {
+        schoolId: values[0] || '',
+        schoolName: values[1] || '',
+        country: values[2] || '',
+        schoolType: values[3] || '',
+        criteria: values[4] || '',
+        indicator: values[5] || '',
+        score: parseFloat(values[6]) || 0,
+        status: values[7] || '',
+        trend: values[8] || 'stable',
+        problem: values[9] || '',
+        solution: values[10] || '',
       }
       rows.push(row)
     }
   }
 
   return rows
+}
+
+function aggregateSchools(rows: CsvRow[]): SchoolData[] {
+  const schoolMap = new Map<string, SchoolData>()
+
+  for (const row of rows) {
+    if (!row.schoolName) continue
+
+    const key = row.schoolId || row.schoolName
+
+    if (!schoolMap.has(key)) {
+      schoolMap.set(key, {
+        name: row.schoolName,
+        country: row.country,
+        countryCode: getCountryCode(row.country),
+        region: row.schoolType || '',
+        sustainabilityScore: 0,
+        sustainabilityProblem: '',
+        sustainabilitySolution: '',
+        communityScore: 0,
+        communityProblem: '',
+        communitySolution: '',
+        wellbeingScore: 0,
+        wellbeingProblem: '',
+        wellbeingSolution: '',
+        innovationScore: 0,
+        innovationProblem: '',
+        innovationSolution: '',
+        globalAwarenessScore: 0,
+        globalAwarenessProblem: '',
+        globalAwarenessSolution: '',
+        trend: 'stable',
+        trendValue: 0,
+      })
+    }
+
+    const school = schoolMap.get(key)!
+    const category = mapCriteria(row.criteria)
+
+    // Update the score for this category (take the latest/highest)
+    switch (category) {
+      case 'sustainability':
+        if (row.score > school.sustainabilityScore) {
+          school.sustainabilityScore = row.score
+          school.sustainabilityProblem = row.problem
+          school.sustainabilitySolution = row.solution
+        }
+        break
+      case 'community':
+        if (row.score > school.communityScore) {
+          school.communityScore = row.score
+          school.communityProblem = row.problem
+          school.communitySolution = row.solution
+        }
+        break
+      case 'wellbeing':
+        if (row.score > school.wellbeingScore) {
+          school.wellbeingScore = row.score
+          school.wellbeingProblem = row.problem
+          school.wellbeingSolution = row.solution
+        }
+        break
+      case 'innovation':
+        if (row.score > school.innovationScore) {
+          school.innovationScore = row.score
+          school.innovationProblem = row.problem
+          school.innovationSolution = row.solution
+        }
+        break
+      case 'globalAwareness':
+        if (row.score > school.globalAwarenessScore) {
+          school.globalAwarenessScore = row.score
+          school.globalAwarenessProblem = row.problem
+          school.globalAwarenessSolution = row.solution
+        }
+        break
+    }
+
+    // Update trend based on latest row
+    const trendLower = row.trend.toLowerCase()
+    if (trendLower.includes('improv')) {
+      school.trend = 'up'
+      school.trendValue = Math.max(school.trendValue, 2.5)
+    } else if (trendLower.includes('declin') || trendLower.includes('down')) {
+      school.trend = 'down'
+      school.trendValue = Math.max(school.trendValue, 1.5)
+    }
+  }
+
+  return Array.from(schoolMap.values())
 }
 
 Deno.serve(async (req) => {
@@ -120,11 +266,15 @@ Deno.serve(async (req) => {
     console.log('CSV fetched, length:', csvText.length)
 
     // Parse CSV data
-    const rows = parseCSV(csvText)
-    console.log(`Parsed ${rows.length} schools from CSV`)
+    const csvRows = parseCSV(csvText)
+    console.log(`Parsed ${csvRows.length} CSV rows`)
 
-    if (rows.length === 0) {
-      throw new Error('No data found in Google Sheet')
+    // Aggregate rows by school
+    const schools = aggregateSchools(csvRows)
+    console.log(`Aggregated into ${schools.length} schools`)
+
+    if (schools.length === 0) {
+      throw new Error('No schools found in Google Sheet')
     }
 
     // Create a sync log entry
@@ -155,29 +305,31 @@ Deno.serve(async (req) => {
 
     // Insert new schools
     console.log('Inserting new schools...')
-    const schoolsToInsert = rows.map(row => ({
-      name: row.name,
-      country: row.country,
-      country_code: row.countryCode,
-      region: row.region,
-      sustainability_score: row.sustainabilityScore,
-      sustainability_problem: row.sustainabilityProblem,
-      sustainability_solution: row.sustainabilitySolution,
-      community_score: row.communityScore,
-      community_problem: row.communityProblem,
-      community_solution: row.communitySolution,
-      wellbeing_score: row.wellbeingScore,
-      wellbeing_problem: row.wellbeingProblem,
-      wellbeing_solution: row.wellbeingSolution,
-      innovation_score: row.innovationScore,
-      innovation_problem: row.innovationProblem,
-      innovation_solution: row.innovationSolution,
-      global_awareness_score: row.globalAwarenessScore,
-      global_awareness_problem: row.globalAwarenessProblem,
-      global_awareness_solution: row.globalAwarenessSolution,
-      trend: row.trend.toLowerCase() === 'up' ? 'up' : row.trend.toLowerCase() === 'down' ? 'down' : 'stable',
-      trend_value: row.trendValue,
+    const schoolsToInsert = schools.map(school => ({
+      name: school.name,
+      country: school.country,
+      country_code: school.countryCode,
+      region: school.region,
+      sustainability_score: school.sustainabilityScore,
+      sustainability_problem: school.sustainabilityProblem,
+      sustainability_solution: school.sustainabilitySolution,
+      community_score: school.communityScore,
+      community_problem: school.communityProblem,
+      community_solution: school.communitySolution,
+      wellbeing_score: school.wellbeingScore,
+      wellbeing_problem: school.wellbeingProblem,
+      wellbeing_solution: school.wellbeingSolution,
+      innovation_score: school.innovationScore,
+      innovation_problem: school.innovationProblem,
+      innovation_solution: school.innovationSolution,
+      global_awareness_score: school.globalAwarenessScore,
+      global_awareness_problem: school.globalAwarenessProblem,
+      global_awareness_solution: school.globalAwarenessSolution,
+      trend: school.trend,
+      trend_value: school.trendValue,
     }))
+
+    console.log('Schools to insert:', JSON.stringify(schoolsToInsert, null, 2))
 
     const { data: insertedSchools, error: insertError } = await supabase
       .from('schools')
