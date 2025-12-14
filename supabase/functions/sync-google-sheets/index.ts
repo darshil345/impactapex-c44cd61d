@@ -129,9 +129,10 @@ function parseCSV(csvText: string): CsvRow[] {
     }
     values.push(current.trim())
 
-    if (values.length >= 7 && values[0] && values[1]) {
+    // First column might be empty or School_ID - use School_Name as key
+    if (values.length >= 7 && values[1]) {
       const row: CsvRow = {
-        schoolId: values[0] || '',
+        schoolId: values[0] || values[1], // Use school name as ID if first column empty
         schoolName: values[1] || '',
         country: values[2] || '',
         schoolType: values[3] || '',
