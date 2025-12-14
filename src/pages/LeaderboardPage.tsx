@@ -4,9 +4,11 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Leaderboard } from '@/components/dashboard/Leaderboard';
 import { SchoolProfile } from '@/components/dashboard/SchoolProfile';
 import { School } from '@/lib/mockData';
+import { useSchools } from '@/hooks/useSchools';
 
 function LeaderboardContent() {
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
+  const { data: schools } = useSchools();
 
   return (
     <DashboardLayout>
@@ -18,7 +20,8 @@ function LeaderboardContent() {
         
         <Leaderboard 
           onSchoolClick={setSelectedSchool} 
-          selectedSchool={selectedSchool} 
+          selectedSchool={selectedSchool}
+          schools={schools}
         />
       </div>
 
