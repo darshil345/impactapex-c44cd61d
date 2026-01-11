@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,24 +7,23 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { FileSpreadsheet, Link, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
+import { FileSpreadsheet, Link, CheckCircle, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function SetupPage() {
   const [sheetUrl, setSheetUrl] = useState('');
-  const [isValidating, setIsValidating] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [syncedCount, setSyncedCount] = useState(0);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const extractSheetId = (url: string): string | null => {
-    // Match Google Sheets URL patterns
     const patterns = [
       /\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/,
-      /^([a-zA-Z0-9-_]+)$/,
+      /^([a-zA-Z0-9-_]{20,})$/,
     ];
     
     for (const pattern of patterns) {
@@ -37,8 +36,20 @@ export default function SetupPage() {
   const validateUrl = (url: string): boolean => {
     if (!url.trim()) return false;
     const sheetId = extractSheetId(url);
-    return sheetId !== null && sheetId.length > 10;
+    return sheetId !== null && sheetId.length > 15;
   };
+
+  // Auto-sync when a valid URL is pasted
+  useEffect(() => {
+    const sheetId = extractSheetId(sheetUrl);
+    if (sheetId && sheetId.length > 15 && !isSyncing && !syncSuccess) {
+      // Debounce the sync to avoid multiple calls
+      const timeoutId = setTimeout(() => {
+        handleSync();
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [sheetUrl]);
 
   const handleSync = async () => {
     if (!validateUrl(sheetUrl)) {
@@ -52,23 +63,10 @@ export default function SetupPage() {
       return;
     }
 
-    setIsValidating(true);
+    setIsSyncing(true);
     setError(null);
 
     try {
-      // First save the URL to the user's profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          google_sheets_url: sheetUrl,
-          has_completed_setup: true 
-        })
-        .eq('id', user?.id);
-
-      if (profileError) throw profileError;
-
-      setIsSyncing(true);
-
       // Call the sync function with the custom sheet ID
       const { data, error: syncError } = await supabase.functions.invoke('sync-google-sheets', {
         body: { sheetId }
@@ -80,10 +78,27 @@ export default function SetupPage() {
         throw new Error(data.error);
       }
 
+      if (!data?.success) {
+        throw new Error('Sync failed. Please check your sheet format and try again.');
+      }
+
+      // Save the URL to the user's profile and mark setup as complete
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          google_sheets_url: sheetUrl,
+          has_completed_setup: true 
+        })
+        .eq('id', user?.id);
+
+      if (profileError) throw profileError;
+
+      setSyncedCount(data?.recordsSynced || 0);
       setSyncSuccess(true);
+      
       toast({
         title: 'Data synced successfully!',
-        description: `${data?.recordsSynced || 0} records imported from your Google Sheet.`,
+        description: `${data?.recordsSynced || 0} schools imported from your Google Sheet.`,
       });
 
       // Navigate to dashboard after success
@@ -93,54 +108,56 @@ export default function SetupPage() {
 
     } catch (err: any) {
       console.error('Sync error:', err);
-      setError(err.message || 'Failed to sync data. Make sure your sheet is publicly accessible.');
+      let errorMessage = err.message || 'Failed to sync data.';
+      
+      // Provide more helpful error messages
+      if (errorMessage.includes('400') || errorMessage.includes('publicly accessible')) {
+        errorMessage = 'Your Google Sheet is not publicly accessible. Please make sure sharing is set to "Anyone with the link can view".';
+      } else if (errorMessage.includes('No valid data')) {
+        errorMessage = 'No valid data found. Please check that your sheet has the correct column format.';
+      }
+      
+      setError(errorMessage);
     } finally {
-      setIsValidating(false);
       setIsSyncing(false);
     }
   };
 
-  const handleSkip = async () => {
-    try {
-      await supabase
-        .from('profiles')
-        .update({ has_completed_setup: true })
-        .eq('id', user?.id);
-      
-      navigate('/');
-    } catch (err) {
-      console.error('Error skipping setup:', err);
-      navigate('/');
-    }
-  };
+  const sampleSheetUrl = 'https://docs.google.com/spreadsheets/d/1vF9F08dNRXq-xToR3fsL0_2yFTtKMsWbLoz-2xD5tvA/edit';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg">
-        <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-            <FileSpreadsheet className="w-8 h-8 text-primary" />
+      <Card className="w-full max-w-xl border-2">
+        <CardHeader className="text-center space-y-4 pb-2">
+          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center">
+            <FileSpreadsheet className="w-10 h-10 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Connect Your Data</CardTitle>
+          <CardTitle className="text-2xl font-display">Connect Your Data Source</CardTitle>
           <CardDescription className="text-base">
-            Link your Google Sheet to sync data with your dashboard. Your sheet must be publicly accessible (Anyone with the link can view).
+            Paste your Google Sheets URL below to sync your school data. 
+            The data will sync automatically once you paste a valid link.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        
+        <CardContent className="space-y-6 pt-4">
           {syncSuccess ? (
-            <div className="text-center py-8 space-y-4">
-              <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+            <div className="text-center py-10 space-y-4">
+              <div className="mx-auto w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center animate-in zoom-in duration-300">
+                <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
               </div>
               <h3 className="text-xl font-semibold text-green-600 dark:text-green-400">
-                Data Synced Successfully!
+                Successfully Synced!
               </h3>
               <p className="text-muted-foreground">
+                {syncedCount} schools imported from your Google Sheet.
+              </p>
+              <p className="text-sm text-muted-foreground animate-pulse">
                 Redirecting to your dashboard...
               </p>
             </div>
           ) : (
             <>
+              {/* Input Section */}
               <div className="space-y-3">
                 <Label htmlFor="sheet-url" className="text-sm font-medium">
                   Google Sheets URL
@@ -156,15 +173,25 @@ export default function SetupPage() {
                       setSheetUrl(e.target.value);
                       setError(null);
                     }}
-                    className="pl-10"
-                    disabled={isValidating || isSyncing}
+                    className="pl-10 h-12 text-base"
+                    disabled={isSyncing}
+                    autoFocus
                   />
+                  {isSyncing && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    </div>
+                  )}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Paste the full URL of your Google Sheet
-                </p>
+                {isSyncing && (
+                  <p className="text-sm text-primary animate-pulse flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Syncing data from Google Sheets...
+                  </p>
+                )}
               </div>
 
+              {/* Error Message */}
               {error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
@@ -172,66 +199,70 @@ export default function SetupPage() {
                 </Alert>
               )}
 
-              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                <h4 className="font-medium text-sm">⚠️ Important: Make your sheet public</h4>
-                <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                  <li>Open your Google Sheet</li>
-                  <li>Click <strong>Share</strong> (top right)</li>
-                  <li>Under "General access", change to <strong>"Anyone with the link"</strong></li>
-                  <li>Set role to <strong>"Viewer"</strong></li>
-                  <li>Copy the link and paste it here</li>
+              {/* Instructions */}
+              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 space-y-3">
+                <h4 className="font-semibold text-sm text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Required: Make your sheet public
+                </h4>
+                <ol className="text-sm text-amber-700 dark:text-amber-300 space-y-2 list-decimal list-inside">
+                  <li>Open your Google Sheet in a new tab</li>
+                  <li>Click <span className="font-medium">Share</span> button (top right corner)</li>
+                  <li>Under "General access", click and change to <span className="font-medium">"Anyone with the link"</span></li>
+                  <li>Make sure the role is set to <span className="font-medium">"Viewer"</span></li>
+                  <li>Copy the URL from your browser and paste it above</li>
                 </ol>
               </div>
 
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <h4 className="font-medium text-sm">Expected Sheet Format:</h4>
-                <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>• Column A: School ID (optional)</li>
-                  <li>• Column B: School Name</li>
-                  <li>• Column C: Country</li>
-                  <li>• Column D: School Type/Region</li>
-                  <li>• Column E: Criteria (e.g., Sustainability, Innovation)</li>
-                  <li>• Column F: Indicator</li>
-                  <li>• Column G: Score (numeric)</li>
-                  <li>• Column H: Status</li>
-                  <li>• Column I: Trend</li>
-                  <li>• Column J: Problem (optional)</li>
-                  <li>• Column K: Solution (optional)</li>
-                </ul>
+              {/* Sheet Format */}
+              <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+                <h4 className="font-medium text-sm">Expected Column Format:</h4>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  <div>A: School ID (optional)</div>
+                  <div>B: School Name</div>
+                  <div>C: Country</div>
+                  <div>D: School Type/Region</div>
+                  <div>E: Criteria</div>
+                  <div>F: Indicator</div>
+                  <div>G: Score (0-100)</div>
+                  <div>H: Status</div>
+                  <div>I: Trend</div>
+                  <div>J: Problem (optional)</div>
+                  <div>K: Solution (optional)</div>
+                </div>
               </div>
 
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleSkip}
-                  disabled={isValidating || isSyncing}
-                  className="flex-1"
+              {/* Sample Sheet Link */}
+              <div className="text-center">
+                <a 
+                  href={sampleSheetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
                 >
-                  Skip for now
-                </Button>
-                <Button
-                  onClick={handleSync}
-                  disabled={!sheetUrl.trim() || isValidating || isSyncing}
-                  className="flex-1 gap-2"
-                >
-                  {isSyncing ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      Syncing...
-                    </>
-                  ) : isValidating ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      Validating...
-                    </>
-                  ) : (
-                    <>
-                      Sync Data
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </Button>
+                  <ExternalLink className="h-4 w-4" />
+                  View sample spreadsheet template
+                </a>
               </div>
+
+              {/* Manual Sync Button */}
+              <Button
+                onClick={handleSync}
+                disabled={!sheetUrl.trim() || isSyncing}
+                className="w-full h-12 text-base gap-2"
+              >
+                {isSyncing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Syncing...
+                  </>
+                ) : (
+                  <>
+                    <FileSpreadsheet className="w-5 h-5" />
+                    Sync Data & Continue
+                  </>
+                )}
+              </Button>
             </>
           )}
         </CardContent>

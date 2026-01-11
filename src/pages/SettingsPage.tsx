@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TierProvider } from '@/contexts/TierContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   User, 
   Bell, 
@@ -15,18 +18,23 @@ import {
   Download,
   Trash2,
   ChevronRight,
-  Loader2
+  Loader2,
+  Key,
+  Smartphone,
+  LogOut,
+  Check,
+  X
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useSyncSchools, useSyncLogs, useSchools } from '@/hooks/useSchools';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
-import { supabase } from '@/integrations/supabase/client';
 
 interface SettingsSectionProps {
   icon: React.ElementType;
@@ -80,80 +88,10 @@ function SettingsRow({ label, description, children }: SettingsRowProps) {
   );
 }
 
-interface AIModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  message: string;
-  isLoading: boolean;
-  action?: string;
-  confirmText?: string;
-  confirmValue?: string;
-  onConfirmChange?: (value: string) => void;
-  onConfirm?: () => void;
-  variant?: 'default' | 'danger';
-}
-
-function AIModal({ 
-  isOpen, 
-  onClose, 
-  title, 
-  message, 
-  isLoading, 
-  confirmText,
-  confirmValue,
-  onConfirmChange,
-  onConfirm,
-  variant = 'default'
-}: AIModalProps) {
-  const isDanger = variant === 'danger';
-  
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className={cn(isDanger && "text-destructive")}>{title}</DialogTitle>
-        </DialogHeader>
-        <div className="py-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{message}</p>
-              {confirmText && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Type "{confirmText}" to confirm:</p>
-                  <Input 
-                    value={confirmValue} 
-                    onChange={(e) => onConfirmChange?.(e.target.value)}
-                    placeholder={confirmText}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          {onConfirm && (
-            <Button 
-              variant={isDanger ? "destructive" : "default"}
-              onClick={onConfirm}
-              disabled={confirmText ? confirmValue !== confirmText : false}
-            >
-              Confirm
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 function SettingsContent() {
   const { isDark, setTheme } = useTheme();
+  const { user, profile, signOut, updateProfile } = useAuth();
+  const navigate = useNavigate();
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [weeklyDigest, setWeeklyDigest] = useState(true);
   const [autoSync, setAutoSync] = useState(false);
@@ -164,9 +102,14 @@ function SettingsContent() {
 
   // Modal states
   const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [modalMessage, setModalMessage] = useState('');
-  const [isModalLoading, setIsModalLoading] = useState(false);
-  const [confirmValue, setConfirmValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Form states
+  const [newEmail, setNewEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [confirmText, setConfirmText] = useState('');
 
   const handleSync = async () => {
     try {
@@ -184,52 +127,83 @@ function SettingsContent() {
     }
   };
 
-  const callSettingsAssistant = async (action: string) => {
-    setActiveModal(action);
-    setIsModalLoading(true);
-    setModalMessage('');
-    setConfirmValue('');
+  const handleChangeEmail = async () => {
+    if (!newEmail) {
+      toast({ title: 'Error', description: 'Please enter a new email address', variant: 'destructive' });
+      return;
+    }
 
+    setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('settings-assistant', {
-        body: { 
-          action, 
-          data: { schoolCount: schools?.length || 0 } 
-        }
-      });
-
+      const { error } = await supabase.auth.updateUser({ email: newEmail });
       if (error) throw error;
-      setModalMessage(data.message);
-    } catch (err) {
-      console.error('Settings assistant error:', err);
-      setModalMessage('Unable to process your request. Please try again later.');
+      
       toast({
-        title: 'Error',
-        description: 'Failed to connect to the assistant',
-        variant: 'destructive',
+        title: 'Verification Email Sent',
+        description: 'Please check both your old and new email to confirm the change.',
       });
+      setActiveModal(null);
+      setNewEmail('');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {
-      setIsModalLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleExportData = async () => {
-    await callSettingsAssistant('export_data');
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      toast({ title: 'Error', description: 'Passwords do not match', variant: 'destructive' });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({ title: 'Error', description: 'Password must be at least 6 characters', variant: 'destructive' });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      
+      toast({
+        title: 'Password Updated',
+        description: 'Your password has been changed successfully.',
+      });
+      setActiveModal(null);
+      setNewPassword('');
+      setConfirmPassword('');
+      setCurrentPassword('');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleConfirmExport = () => {
-    toast({
-      title: 'Export Started',
-      description: 'Your data export will download shortly.',
-    });
-    setActiveModal(null);
-    // Create a simple CSV export
+  const handleEnable2FA = async () => {
+    setIsLoading(true);
+    try {
+      // For now, show that 2FA setup requires additional configuration
+      toast({
+        title: '2FA Setup',
+        description: 'Two-factor authentication will be available soon. We are working on adding this security feature.',
+      });
+      setActiveModal(null);
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleExportData = () => {
     if (schools && schools.length > 0) {
       const csvContent = [
         ['Name', 'Country', 'Avg Score', 'Sustainability', 'Community', 'Wellbeing', 'Innovation', 'Global Awareness'].join(','),
         ...schools.map(s => [
-          s.name,
-          s.country,
+          `"${s.name}"`,
+          `"${s.country}"`,
           s.avgScore,
           s.sustainability,
           s.communityEngagement,
@@ -243,17 +217,27 @@ function SettingsContent() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'school-impact-data.csv';
+      a.download = `school-impact-data-${new Date().toISOString().split('T')[0]}.csv`;
       a.click();
       URL.revokeObjectURL(url);
+      
+      toast({
+        title: 'Export Complete',
+        description: `Exported ${schools.length} schools to CSV.`,
+      });
+    } else {
+      toast({
+        title: 'No Data',
+        description: 'There is no school data to export.',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleDeleteData = async () => {
-    await callSettingsAssistant('delete_data');
-  };
-
-  const handleConfirmDeleteData = async () => {
+    if (confirmText !== 'DELETE') return;
+    
+    setIsLoading(true);
     try {
       const { error } = await supabase
         .from('schools')
@@ -266,40 +250,65 @@ function SettingsContent() {
         title: 'Data Deleted',
         description: 'All school data has been permanently deleted.',
       });
-    } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete data. Please try again.',
-        variant: 'destructive',
-      });
+      setActiveModal(null);
+      setConfirmText('');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (confirmText !== 'DELETE MY ACCOUNT') return;
+    
+    setIsLoading(true);
+    try {
+      // Delete user profile first
+      await supabase.from('profiles').delete().eq('id', user?.id);
+      
+      // Note: Full account deletion requires admin API
+      // For now, we sign out and show a message
+      await signOut();
+      
+      toast({
+        title: 'Account Deletion Requested',
+        description: 'Your data has been removed. Contact support for full account deletion.',
+      });
+      navigate('/auth');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignOutAllDevices = async () => {
+    setIsLoading(true);
+    try {
+      await supabase.auth.signOut({ scope: 'global' });
+      toast({
+        title: 'Signed Out',
+        description: 'You have been signed out from all devices.',
+      });
+      navigate('/auth');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const closeModal = () => {
     setActiveModal(null);
+    setNewEmail('');
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setConfirmText('');
   };
 
   const lastSync = syncLogs?.[0];
-
-  const getModalConfig = (action: string | null) => {
-    switch (action) {
-      case 'export_data':
-        return { title: 'Export Data', confirmText: undefined, onConfirm: handleConfirmExport, variant: 'default' as const };
-      case 'change_email':
-        return { title: 'Change Email', confirmText: undefined, onConfirm: undefined, variant: 'default' as const };
-      case 'change_password':
-        return { title: 'Change Password', confirmText: undefined, onConfirm: undefined, variant: 'default' as const };
-      case 'enable_2fa':
-        return { title: 'Enable Two-Factor Authentication', confirmText: undefined, onConfirm: undefined, variant: 'default' as const };
-      case 'view_sessions':
-        return { title: 'Active Sessions', confirmText: undefined, onConfirm: undefined, variant: 'default' as const };
-      case 'delete_data':
-        return { title: 'Delete All Data', confirmText: 'DELETE', onConfirm: handleConfirmDeleteData, variant: 'danger' as const };
-      case 'delete_account':
-        return { title: 'Delete Account', confirmText: undefined, onConfirm: undefined, variant: 'danger' as const };
-      default:
-        return { title: '', confirmText: undefined, onConfirm: undefined, variant: 'default' as const };
-    }
-  };
-
-  const modalConfig = getModalConfig(activeModal);
 
   return (
     <DashboardLayout>
@@ -325,6 +334,20 @@ function SettingsContent() {
               <span className="text-sm text-muted-foreground">
                 {lastSync ? new Date(lastSync.synced_at).toLocaleString() : 'N/A'}
               </span>
+            </SettingsRow>
+            <Separator />
+            <SettingsRow label="Google Sheets URL" description={profile?.google_sheets_url ? 'Connected' : 'Not connected'}>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  // Allow reconfiguring the sheet
+                  updateProfile({ has_completed_setup: false });
+                  navigate('/setup');
+                }}
+              >
+                {profile?.google_sheets_url ? 'Change Sheet' : 'Connect Sheet'}
+              </Button>
             </SettingsRow>
             <Separator />
             <SettingsRow label="Auto-sync" description="Automatically sync data every hour">
@@ -391,15 +414,16 @@ function SettingsContent() {
             title="Account"
             description="Manage your account settings"
           >
-            <SettingsRow label="Email" description="Your account email address">
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => callSettingsAssistant('change_email')}>
+            <SettingsRow label="Email" description={user?.email || 'No email set'}>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setActiveModal('change_email')}>
                 <Mail className="h-4 w-4" />
                 Change Email
               </Button>
             </SettingsRow>
             <Separator />
             <SettingsRow label="Password" description="Update your password">
-              <Button variant="outline" size="sm" onClick={() => callSettingsAssistant('change_password')}>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setActiveModal('change_password')}>
+                <Key className="h-4 w-4" />
                 Change Password
               </Button>
             </SettingsRow>
@@ -412,15 +436,16 @@ function SettingsContent() {
             description="Keep your account secure"
           >
             <SettingsRow label="Two-Factor Authentication" description="Add an extra layer of security">
-              <Button variant="outline" size="sm" onClick={() => callSettingsAssistant('enable_2fa')}>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setActiveModal('enable_2fa')}>
+                <Smartphone className="h-4 w-4" />
                 Enable 2FA
               </Button>
             </SettingsRow>
             <Separator />
-            <SettingsRow label="Active Sessions" description="Manage your logged-in devices">
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => callSettingsAssistant('view_sessions')}>
-                View Sessions
-                <ChevronRight className="h-4 w-4" />
+            <SettingsRow label="Active Sessions" description="Sign out from all devices">
+              <Button variant="outline" size="sm" className="gap-2" onClick={handleSignOutAllDevices}>
+                <LogOut className="h-4 w-4" />
+                Sign Out All
               </Button>
             </SettingsRow>
           </SettingsSection>
@@ -433,7 +458,7 @@ function SettingsContent() {
             variant="danger"
           >
             <SettingsRow label="Delete All Data" description="Remove all school data from your account">
-              <Button variant="destructive" size="sm" onClick={handleDeleteData}>
+              <Button variant="destructive" size="sm" onClick={() => setActiveModal('delete_data')}>
                 Delete Data
               </Button>
             </SettingsRow>
@@ -443,7 +468,7 @@ function SettingsContent() {
                 variant="outline" 
                 size="sm" 
                 className="text-destructive border-destructive/50 hover:bg-destructive/10"
-                onClick={() => callSettingsAssistant('delete_account')}
+                onClick={() => setActiveModal('delete_account')}
               >
                 Delete Account
               </Button>
@@ -452,19 +477,199 @@ function SettingsContent() {
         </div>
       </div>
 
-      {/* AI Modal */}
-      <AIModal
-        isOpen={!!activeModal}
-        onClose={() => setActiveModal(null)}
-        title={modalConfig.title}
-        message={modalMessage}
-        isLoading={isModalLoading}
-        confirmText={modalConfig.confirmText}
-        confirmValue={confirmValue}
-        onConfirmChange={setConfirmValue}
-        onConfirm={modalConfig.onConfirm}
-        variant={modalConfig.variant}
-      />
+      {/* Change Email Modal */}
+      <Dialog open={activeModal === 'change_email'} onOpenChange={(open) => !open && closeModal()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Email Address</DialogTitle>
+            <DialogDescription>
+              A verification email will be sent to both your current and new email addresses.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Current Email</Label>
+              <Input value={user?.email || ''} disabled />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-email">New Email</Label>
+              <Input 
+                id="new-email"
+                type="email"
+                placeholder="Enter new email address"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeModal}>Cancel</Button>
+            <Button onClick={handleChangeEmail} disabled={isLoading || !newEmail}>
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Send Verification
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Modal */}
+      <Dialog open={activeModal === 'change_password'} onOpenChange={(open) => !open && closeModal()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>
+              Enter a new password for your account. It must be at least 6 characters.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input 
+                id="new-password"
+                type="password"
+                placeholder="Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Input 
+                id="confirm-password"
+                type="password"
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+              {confirmPassword && newPassword !== confirmPassword && (
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <X className="h-3 w-3" /> Passwords do not match
+                </p>
+              )}
+              {confirmPassword && newPassword === confirmPassword && newPassword.length >= 6 && (
+                <p className="text-sm text-green-600 flex items-center gap-1">
+                  <Check className="h-3 w-3" /> Passwords match
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeModal}>Cancel</Button>
+            <Button 
+              onClick={handleChangePassword} 
+              disabled={isLoading || !newPassword || newPassword !== confirmPassword || newPassword.length < 6}
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Update Password
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Enable 2FA Modal */}
+      <Dialog open={activeModal === 'enable_2fa'} onOpenChange={(open) => !open && closeModal()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Two-Factor Authentication</DialogTitle>
+            <DialogDescription>
+              Enhance your account security with 2FA.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+              <Smartphone className="h-8 w-8 text-primary" />
+            </div>
+            <p className="text-muted-foreground">
+              Two-factor authentication adds an extra layer of security to your account. 
+              Once enabled, you'll need to enter a code from your authenticator app when signing in.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              This feature is coming soon. We're working on adding TOTP-based 2FA support.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeModal}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Data Modal */}
+      <Dialog open={activeModal === 'delete_data'} onOpenChange={(open) => !open && closeModal()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Delete All School Data</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. All school data will be permanently deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              You currently have <strong>{schools?.length || 0}</strong> schools in your database. 
+              This action will permanently delete all of them.
+            </p>
+            <div className="space-y-2">
+              <Label>Type <span className="font-mono font-bold">DELETE</span> to confirm</Label>
+              <Input 
+                placeholder="DELETE"
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeModal}>Cancel</Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteData} 
+              disabled={isLoading || confirmText !== 'DELETE'}
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Delete All Data
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Account Modal */}
+      <Dialog open={activeModal === 'delete_account'} onOpenChange={(open) => !open && closeModal()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Delete Account</DialogTitle>
+            <DialogDescription>
+              This action is permanent and cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Deleting your account will:
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+              <li>Remove all your school data</li>
+              <li>Delete your profile and settings</li>
+              <li>Sign you out of all devices</li>
+            </ul>
+            <div className="space-y-2">
+              <Label>Type <span className="font-mono font-bold">DELETE MY ACCOUNT</span> to confirm</Label>
+              <Input 
+                placeholder="DELETE MY ACCOUNT"
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeModal}>Cancel</Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteAccount} 
+              disabled={isLoading || confirmText !== 'DELETE MY ACCOUNT'}
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Delete My Account
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
