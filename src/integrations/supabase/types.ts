@@ -20,6 +20,8 @@ export type Database = {
           created_at: string
           display_name: string | null
           email: string | null
+          google_sheets_url: string | null
+          has_completed_setup: boolean | null
           id: string
           stripe_customer_id: string | null
           subscription_tier: string | null
@@ -30,6 +32,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          google_sheets_url?: string | null
+          has_completed_setup?: boolean | null
           id: string
           stripe_customer_id?: string | null
           subscription_tier?: string | null
@@ -40,6 +44,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          google_sheets_url?: string | null
+          has_completed_setup?: boolean | null
           id?: string
           stripe_customer_id?: string | null
           subscription_tier?: string | null
