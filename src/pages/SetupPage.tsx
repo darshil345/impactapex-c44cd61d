@@ -172,15 +172,31 @@ export default function SetupPage() {
                 </Alert>
               )}
 
+              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                <h4 className="font-medium text-sm">⚠️ Important: Make your sheet public</h4>
+                <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                  <li>Open your Google Sheet</li>
+                  <li>Click <strong>Share</strong> (top right)</li>
+                  <li>Under "General access", change to <strong>"Anyone with the link"</strong></li>
+                  <li>Set role to <strong>"Viewer"</strong></li>
+                  <li>Copy the link and paste it here</li>
+                </ol>
+              </div>
+
               <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                 <h4 className="font-medium text-sm">Expected Sheet Format:</h4>
                 <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>• Column A: School Name</li>
-                  <li>• Column B: Country</li>
-                  <li>• Column C: Criteria (e.g., Sustainability, Innovation)</li>
-                  <li>• Column D: Score (numeric value)</li>
-                  <li>• Column E: Problem Description (optional)</li>
-                  <li>• Column F: Solution Description (optional)</li>
+                  <li>• Column A: School ID (optional)</li>
+                  <li>• Column B: School Name</li>
+                  <li>• Column C: Country</li>
+                  <li>• Column D: School Type/Region</li>
+                  <li>• Column E: Criteria (e.g., Sustainability, Innovation)</li>
+                  <li>• Column F: Indicator</li>
+                  <li>• Column G: Score (numeric)</li>
+                  <li>• Column H: Status</li>
+                  <li>• Column I: Trend</li>
+                  <li>• Column J: Problem (optional)</li>
+                  <li>• Column K: Solution (optional)</li>
                 </ul>
               </div>
 
