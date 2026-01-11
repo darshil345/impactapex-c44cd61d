@@ -255,16 +255,36 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+    // Check if a custom sheet ID was provided in the request body
+    let customSheetId: string | null = null
+    try {
+      const body = await req.json()
+      customSheetId = body?.sheetId || null
+      console.log('Custom sheet ID provided:', customSheetId)
+    } catch {
+      // No body or invalid JSON, use default sheet
+      console.log('No custom sheet ID, using default')
+    }
+
+    // Use custom sheet ID if provided, otherwise use default
+    const sheetId = customSheetId || SHEET_ID
+    const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`
+
     // Fetch data from Google Sheets
-    console.log('Fetching data from Google Sheets...')
-    const response = await fetch(SHEET_URL)
+    console.log('Fetching data from Google Sheets:', sheetUrl)
+    const response = await fetch(sheetUrl)
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch Google Sheet: ${response.status}`)
+      throw new Error(`Failed to fetch Google Sheet: ${response.status}. Make sure the sheet is publicly accessible.`)
     }
 
     const csvText = await response.text()
     console.log('CSV fetched, length:', csvText.length)
+
+    // Check if we got an HTML error page instead of CSV
+    if (csvText.includes('<!DOCTYPE html>') || csvText.includes('<html')) {
+      throw new Error('The Google Sheet is not publicly accessible. Please set sharing to "Anyone with the link can view".')
+    }
 
     // Parse CSV data
     const csvRows = parseCSV(csvText)
@@ -275,7 +295,7 @@ Deno.serve(async (req) => {
     console.log(`Aggregated into ${schools.length} schools`)
 
     if (schools.length === 0) {
-      throw new Error('No schools found in Google Sheet')
+      throw new Error('No valid data found in the Google Sheet. Please check the format matches the expected columns.')
     }
 
     // Create a sync log entry
@@ -371,6 +391,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         message: `Synced ${insertedSchools?.length || 0} schools from Google Sheets`,
+        recordsSynced: insertedSchools?.length || 0,
         schools: insertedSchools?.length || 0
       }),
       {

@@ -8,6 +8,8 @@ interface Profile {
   display_name: string | null;
   avatar_url: string | null;
   subscription_tier: string | null;
+  google_sheets_url: string | null;
+  has_completed_setup: boolean | null;
 }
 
 interface AuthContextType {
