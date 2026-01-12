@@ -465,7 +465,7 @@ Deno.serve(async (req) => {
       global_awareness_score: school.globalAwarenessScore,
       global_awareness_problem: school.globalAwarenessProblem,
       global_awareness_solution: school.globalAwarenessSolution,
-      avg_score: school.avgScore,
+      // Note: avg_score is a generated column, don't insert it
       trend: school.trend,
       trend_value: school.trendValue,
     }))
