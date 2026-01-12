@@ -5,24 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Google Sheets public CSV export URL
-const SHEET_ID = '1vF9F08dNRXq-xToR3fsL0_2yFTtKMsWbLoz-2xD5tvA'
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`
-
-interface CsvRow {
-  schoolId: string
-  schoolName: string
-  country: string
-  schoolType: string
-  criteria: string
-  indicator: string
-  score: number
-  status: string
-  trend: string
-  problem: string
-  solution: string
-}
-
 interface SchoolData {
   name: string
   country: string
@@ -45,6 +27,7 @@ interface SchoolData {
   globalAwarenessSolution: string
   trend: string
   trendValue: number
+  avgScore: number
 }
 
 // Map country to country code
@@ -54,6 +37,8 @@ function getCountryCode(country: string): string {
     'singapore': 'SG',
     'usa': 'US',
     'uk': 'GB',
+    'united kingdom': 'GB',
+    'united states': 'US',
     'switzerland': 'CH',
     'germany': 'DE',
     'france': 'FR',
@@ -64,6 +49,7 @@ function getCountryCode(country: string): string {
     'brazil': 'BR',
     'south africa': 'ZA',
     'uae': 'AE',
+    'united arab emirates': 'AE',
     'netherlands': 'NL',
     'spain': 'ES',
     'italy': 'IT',
@@ -71,26 +57,61 @@ function getCountryCode(country: string): string {
     'norway': 'NO',
     'denmark': 'DK',
     'finland': 'FI',
+    'new zealand': 'NZ',
+    'ireland': 'IE',
+    'portugal': 'PT',
+    'austria': 'AT',
+    'belgium': 'BE',
+    'poland': 'PL',
+    'czech republic': 'CZ',
+    'greece': 'GR',
+    'turkey': 'TR',
+    'mexico': 'MX',
+    'argentina': 'AR',
+    'chile': 'CL',
+    'colombia': 'CO',
+    'peru': 'PE',
+    'south korea': 'KR',
+    'korea': 'KR',
+    'thailand': 'TH',
+    'vietnam': 'VN',
+    'indonesia': 'ID',
+    'malaysia': 'MY',
+    'philippines': 'PH',
+    'taiwan': 'TW',
+    'hong kong': 'HK',
+    'russia': 'RU',
+    'ukraine': 'UA',
+    'egypt': 'EG',
+    'nigeria': 'NG',
+    'kenya': 'KE',
+    'morocco': 'MA',
+    'israel': 'IL',
+    'saudi arabia': 'SA',
+    'qatar': 'QA',
+    'kuwait': 'KW',
+    'bahrain': 'BH',
+    'oman': 'OM',
   }
-  return countryMap[country.toLowerCase()] || 'XX'
+  return countryMap[country.toLowerCase().trim()] || 'XX'
 }
 
 // Map criteria name to our category
 function mapCriteria(criteria: string): string {
   const lower = criteria.toLowerCase()
-  if (lower.includes('sustainab') || lower.includes('carbon') || lower.includes('recycl') || lower.includes('environment')) {
+  if (lower.includes('sustainab') || lower.includes('carbon') || lower.includes('recycl') || lower.includes('environment') || lower.includes('green') || lower.includes('eco')) {
     return 'sustainability'
   }
-  if (lower.includes('community') || lower.includes('volunteer') || lower.includes('engagement')) {
+  if (lower.includes('community') || lower.includes('volunteer') || lower.includes('engagement') || lower.includes('outreach') || lower.includes('service')) {
     return 'community'
   }
-  if (lower.includes('wellbeing') || lower.includes('mental') || lower.includes('health') || lower.includes('physical')) {
+  if (lower.includes('wellbeing') || lower.includes('well-being') || lower.includes('mental') || lower.includes('health') || lower.includes('physical') || lower.includes('wellness')) {
     return 'wellbeing'
   }
-  if (lower.includes('innovation') || lower.includes('academic') || lower.includes('steam') || lower.includes('project') || lower.includes('learning')) {
+  if (lower.includes('innovation') || lower.includes('academic') || lower.includes('steam') || lower.includes('stem') || lower.includes('project') || lower.includes('learning') || lower.includes('tech') || lower.includes('digital')) {
     return 'innovation'
   }
-  if (lower.includes('global') || lower.includes('international') || lower.includes('exchange') || lower.includes('diversity') || lower.includes('inclusion')) {
+  if (lower.includes('global') || lower.includes('international') || lower.includes('exchange') || lower.includes('diversity') || lower.includes('inclusion') || lower.includes('cultural') || lower.includes('multicultural')) {
     return 'globalAwareness'
   }
   if (lower.includes('leadership') || lower.includes('student council') || lower.includes('initiative')) {
@@ -99,20 +120,25 @@ function mapCriteria(criteria: string): string {
   return 'globalAwareness' // Default
 }
 
-function parseCSV(csvText: string): CsvRow[] {
+// Find column index by checking header names
+function findColumnIndex(headers: string[], possibleNames: string[]): number {
+  for (let i = 0; i < headers.length; i++) {
+    const header = headers[i].toLowerCase().replace(/[^a-z0-9]/g, '')
+    for (const name of possibleNames) {
+      const searchName = name.toLowerCase().replace(/[^a-z0-9]/g, '')
+      if (header.includes(searchName) || searchName.includes(header)) {
+        return i
+      }
+    }
+  }
+  return -1
+}
+
+function parseCSV(csvText: string): { headers: string[], rows: string[][] } {
   const lines = csvText.split('\n')
-  if (lines.length < 2) return []
+  if (lines.length < 2) return { headers: [], rows: [] }
 
-  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, '').toLowerCase())
-  console.log('CSV Headers:', headers)
-
-  const rows: CsvRow[] = []
-
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim()
-    if (!line) continue
-
-    // Handle CSV with potential quoted fields
+  const parseRow = (line: string): string[] => {
     const values: string[] = []
     let current = ''
     let inQuotes = false
@@ -121,50 +147,108 @@ function parseCSV(csvText: string): CsvRow[] {
       if (char === '"') {
         inQuotes = !inQuotes
       } else if (char === ',' && !inQuotes) {
-        values.push(current.trim())
+        values.push(current.trim().replace(/^"|"$/g, ''))
         current = ''
       } else {
         current += char
       }
     }
-    values.push(current.trim())
-
-    // First column might be empty or School_ID - use School_Name as key
-    if (values.length >= 7 && values[1]) {
-      const row: CsvRow = {
-        schoolId: values[0] || values[1], // Use school name as ID if first column empty
-        schoolName: values[1] || '',
-        country: values[2] || '',
-        schoolType: values[3] || '',
-        criteria: values[4] || '',
-        indicator: values[5] || '',
-        score: parseFloat(values[6]) || 0,
-        status: values[7] || '',
-        trend: values[8] || 'stable',
-        problem: values[9] || '',
-        solution: values[10] || '',
-      }
-      rows.push(row)
-    }
+    values.push(current.trim().replace(/^"|"$/g, ''))
+    return values
   }
 
-  return rows
+  const headers = parseRow(lines[0])
+  const rows: string[][] = []
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (!line) continue
+    rows.push(parseRow(line))
+  }
+
+  return { headers, rows }
 }
 
-function aggregateSchools(rows: CsvRow[]): SchoolData[] {
+function processSheetData(headers: string[], rows: string[][]): SchoolData[] {
+  console.log('Processing with headers:', headers)
+  
+  // Find column indices dynamically
+  const schoolNameIdx = findColumnIndex(headers, ['school_name', 'schoolname', 'school', 'name', 'institution'])
+  const countryIdx = findColumnIndex(headers, ['country', 'nation', 'location'])
+  const schoolTypeIdx = findColumnIndex(headers, ['school_type', 'schooltype', 'type', 'region', 'category'])
+  const criteriaIdx = findColumnIndex(headers, ['criteria', 'criterion', 'category', 'pillar', 'area'])
+  const indicatorIdx = findColumnIndex(headers, ['indicator', 'metric', 'measure', 'kpi'])
+  const scoreIdx = findColumnIndex(headers, ['score', 'value', 'points', 'rating', 'result'])
+  const statusIdx = findColumnIndex(headers, ['status', 'state', 'condition'])
+  const trendIdx = findColumnIndex(headers, ['trend', 'direction', 'change'])
+  const problemIdx = findColumnIndex(headers, ['problem', 'challenge', 'issue', 'weakness'])
+  const solutionIdx = findColumnIndex(headers, ['solution', 'action', 'improvement', 'recommendation'])
+  
+  console.log('Column indices:', { schoolNameIdx, countryIdx, schoolTypeIdx, criteriaIdx, indicatorIdx, scoreIdx, statusIdx, trendIdx, problemIdx, solutionIdx })
+
+  // If we can't find essential columns, try positional parsing
+  const usePositional = schoolNameIdx === -1 || scoreIdx === -1
+
+  if (usePositional) {
+    console.log('Using positional parsing as fallback')
+  }
+
   const schoolMap = new Map<string, SchoolData>()
 
-  for (const row of rows) {
-    if (!row.schoolName) continue
+  for (const values of rows) {
+    if (values.length < 3) continue
 
-    const key = row.schoolId || row.schoolName
+    let schoolName: string
+    let country: string
+    let schoolType: string
+    let criteria: string
+    let indicator: string
+    let score: number
+    let status: string
+    let trend: string
+    let problem: string
+    let solution: string
 
-    if (!schoolMap.has(key)) {
-      schoolMap.set(key, {
-        name: row.schoolName,
-        country: row.country,
-        countryCode: getCountryCode(row.country),
-        region: row.schoolType || '',
+    if (usePositional) {
+      // Assume common format: school_name, country, school_type, criteria, indicator, score, status, trend, problem, solution
+      // Or without ID column: school_name is first
+      const hasIdColumn = headers.length > 0 && headers[0].toLowerCase().includes('id') && !headers[0].toLowerCase().includes('school')
+      const offset = hasIdColumn ? 1 : 0
+      
+      schoolName = values[offset] || ''
+      country = values[offset + 1] || ''
+      schoolType = values[offset + 2] || ''
+      criteria = values[offset + 3] || ''
+      indicator = values[offset + 4] || ''
+      score = parseFloat(values[offset + 5]) || 0
+      status = values[offset + 6] || ''
+      trend = values[offset + 7] || 'stable'
+      problem = values[offset + 8] || ''
+      solution = values[offset + 9] || ''
+    } else {
+      schoolName = schoolNameIdx >= 0 ? values[schoolNameIdx] || '' : ''
+      country = countryIdx >= 0 ? values[countryIdx] || '' : ''
+      schoolType = schoolTypeIdx >= 0 ? values[schoolTypeIdx] || '' : ''
+      criteria = criteriaIdx >= 0 ? values[criteriaIdx] || '' : ''
+      indicator = indicatorIdx >= 0 ? values[indicatorIdx] || '' : ''
+      score = scoreIdx >= 0 ? parseFloat(values[scoreIdx]) || 0 : 0
+      status = statusIdx >= 0 ? values[statusIdx] || '' : ''
+      trend = trendIdx >= 0 ? values[trendIdx] || 'stable' : 'stable'
+      problem = problemIdx >= 0 ? values[problemIdx] || '' : ''
+      solution = solutionIdx >= 0 ? values[solutionIdx] || '' : ''
+    }
+
+    // Skip if no school name
+    if (!schoolName || schoolName.trim() === '') continue
+
+    const schoolKey = schoolName.trim().toLowerCase()
+
+    if (!schoolMap.has(schoolKey)) {
+      schoolMap.set(schoolKey, {
+        name: schoolName.trim(),
+        country: country.trim(),
+        countryCode: getCountryCode(country),
+        region: schoolType.trim(),
         sustainabilityScore: 0,
         sustainabilityProblem: '',
         sustainabilitySolution: '',
@@ -182,63 +266,80 @@ function aggregateSchools(rows: CsvRow[]): SchoolData[] {
         globalAwarenessSolution: '',
         trend: 'stable',
         trendValue: 0,
+        avgScore: 0,
       })
     }
 
-    const school = schoolMap.get(key)!
-    const category = mapCriteria(row.criteria)
+    const school = schoolMap.get(schoolKey)!
+    const category = mapCriteria(criteria || indicator || schoolType)
 
-    // Update the score for this category (take the latest/highest)
+    // Update the score for this category (take the highest)
     switch (category) {
       case 'sustainability':
-        if (row.score > school.sustainabilityScore) {
-          school.sustainabilityScore = row.score
-          school.sustainabilityProblem = row.problem
-          school.sustainabilitySolution = row.solution
+        if (score > school.sustainabilityScore) {
+          school.sustainabilityScore = score
+          school.sustainabilityProblem = problem
+          school.sustainabilitySolution = solution
         }
         break
       case 'community':
-        if (row.score > school.communityScore) {
-          school.communityScore = row.score
-          school.communityProblem = row.problem
-          school.communitySolution = row.solution
+        if (score > school.communityScore) {
+          school.communityScore = score
+          school.communityProblem = problem
+          school.communitySolution = solution
         }
         break
       case 'wellbeing':
-        if (row.score > school.wellbeingScore) {
-          school.wellbeingScore = row.score
-          school.wellbeingProblem = row.problem
-          school.wellbeingSolution = row.solution
+        if (score > school.wellbeingScore) {
+          school.wellbeingScore = score
+          school.wellbeingProblem = problem
+          school.wellbeingSolution = solution
         }
         break
       case 'innovation':
-        if (row.score > school.innovationScore) {
-          school.innovationScore = row.score
-          school.innovationProblem = row.problem
-          school.innovationSolution = row.solution
+        if (score > school.innovationScore) {
+          school.innovationScore = score
+          school.innovationProblem = problem
+          school.innovationSolution = solution
         }
         break
       case 'globalAwareness':
-        if (row.score > school.globalAwarenessScore) {
-          school.globalAwarenessScore = row.score
-          school.globalAwarenessProblem = row.problem
-          school.globalAwarenessSolution = row.solution
+        if (score > school.globalAwarenessScore) {
+          school.globalAwarenessScore = score
+          school.globalAwarenessProblem = problem
+          school.globalAwarenessSolution = solution
         }
         break
     }
 
-    // Update trend based on latest row
-    const trendLower = row.trend.toLowerCase()
-    if (trendLower.includes('improv')) {
+    // Update trend
+    const trendLower = trend.toLowerCase()
+    if (trendLower.includes('improv') || trendLower.includes('up') || trendLower.includes('increas') || trendLower.includes('grow')) {
       school.trend = 'up'
       school.trendValue = Math.max(school.trendValue, 2.5)
-    } else if (trendLower.includes('declin') || trendLower.includes('down')) {
+    } else if (trendLower.includes('declin') || trendLower.includes('down') || trendLower.includes('decreas') || trendLower.includes('drop')) {
       school.trend = 'down'
       school.trendValue = Math.max(school.trendValue, 1.5)
     }
   }
 
-  return Array.from(schoolMap.values())
+  // Calculate average scores
+  const schools = Array.from(schoolMap.values())
+  for (const school of schools) {
+    const scores = [
+      school.sustainabilityScore,
+      school.communityScore,
+      school.wellbeingScore,
+      school.innovationScore,
+      school.globalAwarenessScore,
+    ].filter(s => s > 0)
+    
+    school.avgScore = scores.length > 0 
+      ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10
+      : 0
+  }
+
+  return schools
 }
 
 Deno.serve(async (req) => {
@@ -262,13 +363,23 @@ Deno.serve(async (req) => {
       customSheetId = body?.sheetId || null
       console.log('Custom sheet ID provided:', customSheetId)
     } catch {
-      // No body or invalid JSON, use default sheet
-      console.log('No custom sheet ID, using default')
+      console.log('No custom sheet ID provided')
     }
 
-    // Use custom sheet ID if provided, otherwise use default
-    const sheetId = customSheetId || SHEET_ID
-    const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`
+    if (!customSheetId) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'No sheet ID provided. Please provide a Google Sheets URL.'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      )
+    }
+
+    const sheetUrl = `https://docs.google.com/spreadsheets/d/${customSheetId}/export?format=csv&gid=0`
 
     // Fetch data from Google Sheets
     console.log('Fetching data from Google Sheets:', sheetUrl)
@@ -287,16 +398,24 @@ Deno.serve(async (req) => {
     }
 
     // Parse CSV data
-    const csvRows = parseCSV(csvText)
-    console.log(`Parsed ${csvRows.length} CSV rows`)
+    const { headers, rows } = parseCSV(csvText)
+    console.log('CSV Headers:', headers)
+    console.log(`Parsed ${rows.length} CSV rows`)
 
-    // Aggregate rows by school
-    const schools = aggregateSchools(csvRows)
-    console.log(`Aggregated into ${schools.length} schools`)
+    if (rows.length === 0) {
+      throw new Error('No data rows found in the Google Sheet.')
+    }
+
+    // Process and aggregate data
+    const schools = processSheetData(headers, rows)
+    console.log(`Processed ${schools.length} schools`)
 
     if (schools.length === 0) {
-      throw new Error('No valid data found in the Google Sheet. Please check the format matches the expected columns.')
+      throw new Error('No valid school data found. Please check that your sheet has the correct column format with school names and scores.')
     }
+
+    // Log first school for debugging
+    console.log('First school:', JSON.stringify(schools[0], null, 2))
 
     // Create a sync log entry
     const { data: syncLog, error: syncLogError } = await supabase
@@ -318,7 +437,7 @@ Deno.serve(async (req) => {
     const { error: deleteError } = await supabase
       .from('schools')
       .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000') // Delete all
+      .neq('id', '00000000-0000-0000-0000-000000000000')
 
     if (deleteError) {
       console.error('Error deleting schools:', deleteError)
@@ -346,11 +465,10 @@ Deno.serve(async (req) => {
       global_awareness_score: school.globalAwarenessScore,
       global_awareness_problem: school.globalAwarenessProblem,
       global_awareness_solution: school.globalAwarenessSolution,
+      avg_score: school.avgScore,
       trend: school.trend,
       trend_value: school.trendValue,
     }))
-
-    console.log('Schools to insert:', JSON.stringify(schoolsToInsert, null, 2))
 
     const { data: insertedSchools, error: insertError } = await supabase
       .from('schools')
@@ -360,7 +478,6 @@ Deno.serve(async (req) => {
     if (insertError) {
       console.error('Error inserting schools:', insertError)
       
-      // Update sync log with error
       if (syncLog) {
         await supabase
           .from('sync_logs')

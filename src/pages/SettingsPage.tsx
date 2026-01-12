@@ -239,6 +239,7 @@ function SettingsContent() {
     
     setIsLoading(true);
     try {
+      // Delete all school data
       const { error } = await supabase
         .from('schools')
         .delete()
@@ -246,12 +247,21 @@ function SettingsContent() {
       
       if (error) throw error;
       
+      // Reset setup status and clear google sheets url so user needs to reconnect
+      await updateProfile({ 
+        has_completed_setup: false,
+        google_sheets_url: null 
+      });
+      
       toast({
         title: 'Data Deleted',
-        description: 'All school data has been permanently deleted.',
+        description: 'All school data has been permanently deleted. Redirecting to setup...',
       });
       setActiveModal(null);
       setConfirmText('');
+      
+      // Redirect to setup page
+      navigate('/setup');
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {
