@@ -16,7 +16,7 @@ export default function SetupPage() {
   const [syncSuccess, setSyncSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [syncedCount, setSyncedCount] = useState(0);
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -83,13 +83,10 @@ export default function SetupPage() {
       }
 
       // Save the URL to the user's profile and mark setup as complete
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          google_sheets_url: sheetUrl,
-          has_completed_setup: true 
-        })
-        .eq('id', user?.id);
+      const { error: profileError } = await updateProfile({ 
+        google_sheets_url: sheetUrl,
+        has_completed_setup: true 
+      });
 
       if (profileError) throw profileError;
 
