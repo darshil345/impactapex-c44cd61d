@@ -211,47 +211,53 @@ export default function SetupPage() {
                 </ol>
               </div>
 
-              {/* Sheet Format */}
-              <div className="bg-muted/50 rounded-xl p-4 space-y-3">
-                <h4 className="font-medium text-sm">Required Columns:</h4>
-                <div className="space-y-2 text-xs text-muted-foreground">
-                  <div className="flex gap-2">
-                    <span className="font-medium text-foreground w-24">School Name</span>
-                    <span>Name of the school</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="font-medium text-foreground w-24">Country</span>
-                    <span>Country where the school is located</span>
-                  </div>
+              {/* Sample Data Table */}
+              <div className="bg-muted/50 rounded-xl p-4 space-y-3 overflow-x-auto">
+                <h4 className="font-medium text-sm">Sample Spreadsheet Format:</h4>
+                <div className="min-w-[600px]">
+                  <table className="w-full text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-muted">
+                        <th className="border border-border p-2 text-left font-semibold">School Name</th>
+                        <th className="border border-border p-2 text-left font-semibold">Country</th>
+                        <th className="border border-border p-2 text-left font-semibold">Region</th>
+                        <th className="border border-border p-2 text-left font-semibold">Initiatives</th>
+                        <th className="border border-border p-2 text-left font-semibold">Activities</th>
+                        <th className="border border-border p-2 text-left font-semibold">Achievements</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="border border-border p-2">Green Valley School</td>
+                        <td className="border border-border p-2">India</td>
+                        <td className="border border-border p-2">Urban</td>
+                        <td className="border border-border p-2">Solar panels, rainwater harvesting</td>
+                        <td className="border border-border p-2">Beach cleanup, tree planting</td>
+                        <td className="border border-border p-2">National Green School Award</td>
+                      </tr>
+                      <tr className="bg-muted/30">
+                        <td className="border border-border p-2">Innovation Academy</td>
+                        <td className="border border-border p-2">Singapore</td>
+                        <td className="border border-border p-2">Urban</td>
+                        <td className="border border-border p-2">STEM lab, coding bootcamp</td>
+                        <td className="border border-border p-2">Robotics competitions, hackathons</td>
+                        <td className="border border-border p-2">Best Innovation Program 2024</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-border p-2">Global Minds Academy</td>
+                        <td className="border border-border p-2">UK</td>
+                        <td className="border border-border p-2">Suburban</td>
+                        <td className="border border-border p-2">Cultural exchange, MUN club</td>
+                        <td className="border border-border p-2">International student programs</td>
+                        <td className="border border-border p-2">UNESCO Associated School</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
                 
-                <h4 className="font-medium text-sm mt-4">Optional Columns (add any that apply):</h4>
-                <div className="space-y-2 text-xs text-muted-foreground">
-                  <div className="flex gap-2">
-                    <span className="font-medium text-foreground w-24">Region/Type</span>
-                    <span>School type or region</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="font-medium text-foreground w-24">Initiatives</span>
-                    <span>e.g., "Solar panel installation", "Campus recycling program"</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="font-medium text-foreground w-24">Activities</span>
-                    <span>e.g., "Beach cleanup drives", "Tree planting events"</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="font-medium text-foreground w-24">Programs</span>
-                    <span>e.g., "STEM innovation lab", "Mental wellness counseling"</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="font-medium text-foreground w-24">Achievements</span>
-                    <span>e.g., "Won national green school award"</span>
-                  </div>
-                </div>
-
                 <div className="bg-primary/10 rounded-lg p-3 mt-3">
                   <p className="text-xs text-primary font-medium">
-                    🤖 AI-Powered Scoring: No scores needed! Our AI analyzes your initiatives and activities to automatically generate SDG-based scores for Sustainability, Community, Wellbeing, Innovation, and Global Awareness.
+                    🤖 AI-Powered Scoring: Just describe your initiatives and activities - our AI automatically analyzes them to generate SDG scores for Sustainability, Community, Wellbeing, Innovation, and Global Awareness.
                   </p>
                 </div>
               </div>
