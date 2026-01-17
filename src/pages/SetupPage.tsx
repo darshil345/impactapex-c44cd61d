@@ -213,33 +213,47 @@ export default function SetupPage() {
 
               {/* Sheet Format */}
               <div className="bg-muted/50 rounded-xl p-4 space-y-3">
-                <h4 className="font-medium text-sm">Expected Column Format:</h4>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                  <div>A: School Name</div>
-                  <div>B: Country</div>
-                  <div>C: Region/Type (optional)</div>
-                  <div>D: Initiatives</div>
-                  <div>E: Activities</div>
-                  <div>F: Programs</div>
-                  <div>G: Achievements</div>
-                  <div>H: Challenges (optional)</div>
+                <h4 className="font-medium text-sm">Required Columns:</h4>
+                <div className="space-y-2 text-xs text-muted-foreground">
+                  <div className="flex gap-2">
+                    <span className="font-medium text-foreground w-24">School Name</span>
+                    <span>Name of the school</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="font-medium text-foreground w-24">Country</span>
+                    <span>Country where the school is located</span>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  <strong>Note:</strong> No need to add scores! Our AI will analyze your school's initiatives and activities to automatically generate SDG-based scores.
-                </p>
-              </div>
+                
+                <h4 className="font-medium text-sm mt-4">Optional Columns (add any that apply):</h4>
+                <div className="space-y-2 text-xs text-muted-foreground">
+                  <div className="flex gap-2">
+                    <span className="font-medium text-foreground w-24">Region/Type</span>
+                    <span>School type or region</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="font-medium text-foreground w-24">Initiatives</span>
+                    <span>e.g., "Solar panel installation", "Campus recycling program"</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="font-medium text-foreground w-24">Activities</span>
+                    <span>e.g., "Beach cleanup drives", "Tree planting events"</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="font-medium text-foreground w-24">Programs</span>
+                    <span>e.g., "STEM innovation lab", "Mental wellness counseling"</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="font-medium text-foreground w-24">Achievements</span>
+                    <span>e.g., "Won national green school award"</span>
+                  </div>
+                </div>
 
-              {/* Sample Sheet Link */}
-              <div className="text-center">
-                <a 
-                  href={sampleSheetUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  View sample spreadsheet template
-                </a>
+                <div className="bg-primary/10 rounded-lg p-3 mt-3">
+                  <p className="text-xs text-primary font-medium">
+                    🤖 AI-Powered Scoring: No scores needed! Our AI analyzes your initiatives and activities to automatically generate SDG-based scores for Sustainability, Community, Wellbeing, Innovation, and Global Awareness.
+                  </p>
+                </div>
               </div>
 
               {/* Manual Sync Button */}
