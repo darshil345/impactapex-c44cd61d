@@ -215,18 +215,18 @@ export default function SetupPage() {
               <div className="bg-muted/50 rounded-xl p-4 space-y-3">
                 <h4 className="font-medium text-sm">Expected Column Format:</h4>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                  <div>A: School ID (optional)</div>
-                  <div>B: School Name</div>
-                  <div>C: Country</div>
-                  <div>D: School Type/Region</div>
-                  <div>E: Criteria</div>
-                  <div>F: Indicator</div>
-                  <div>G: Score (0-100)</div>
-                  <div>H: Status</div>
-                  <div>I: Trend</div>
-                  <div>J: Problem (optional)</div>
-                  <div>K: Solution (optional)</div>
+                  <div>A: School Name</div>
+                  <div>B: Country</div>
+                  <div>C: Region/Type (optional)</div>
+                  <div>D: Initiatives</div>
+                  <div>E: Activities</div>
+                  <div>F: Programs</div>
+                  <div>G: Achievements</div>
+                  <div>H: Challenges (optional)</div>
                 </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  <strong>Note:</strong> No need to add scores! Our AI will analyze your school's initiatives and activities to automatically generate SDG-based scores.
+                </p>
               </div>
 
               {/* Sample Sheet Link */}

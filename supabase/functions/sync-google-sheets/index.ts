@@ -30,6 +30,17 @@ interface SchoolData {
   avgScore: number
 }
 
+interface SchoolInputData {
+  name: string
+  country: string
+  region: string
+  initiatives: string[]
+  activities: string[]
+  programs: string[]
+  achievements: string[]
+  challenges: string[]
+}
+
 // Map country to country code
 function getCountryCode(country: string): string {
   const countryMap: Record<string, string> = {
@@ -96,30 +107,6 @@ function getCountryCode(country: string): string {
   return countryMap[country.toLowerCase().trim()] || 'XX'
 }
 
-// Map criteria name to our category
-function mapCriteria(criteria: string): string {
-  const lower = criteria.toLowerCase()
-  if (lower.includes('sustainab') || lower.includes('carbon') || lower.includes('recycl') || lower.includes('environment') || lower.includes('green') || lower.includes('eco')) {
-    return 'sustainability'
-  }
-  if (lower.includes('community') || lower.includes('volunteer') || lower.includes('engagement') || lower.includes('outreach') || lower.includes('service')) {
-    return 'community'
-  }
-  if (lower.includes('wellbeing') || lower.includes('well-being') || lower.includes('mental') || lower.includes('health') || lower.includes('physical') || lower.includes('wellness')) {
-    return 'wellbeing'
-  }
-  if (lower.includes('innovation') || lower.includes('academic') || lower.includes('steam') || lower.includes('stem') || lower.includes('project') || lower.includes('learning') || lower.includes('tech') || lower.includes('digital')) {
-    return 'innovation'
-  }
-  if (lower.includes('global') || lower.includes('international') || lower.includes('exchange') || lower.includes('diversity') || lower.includes('inclusion') || lower.includes('cultural') || lower.includes('multicultural')) {
-    return 'globalAwareness'
-  }
-  if (lower.includes('leadership') || lower.includes('student council') || lower.includes('initiative')) {
-    return 'innovation' // Map leadership to innovation
-  }
-  return 'globalAwareness' // Default
-}
-
 // Find column index by checking header names
 function findColumnIndex(headers: string[], possibleNames: string[]): number {
   for (let i = 0; i < headers.length; i++) {
@@ -169,75 +156,35 @@ function parseCSV(csvText: string): { headers: string[], rows: string[][] } {
   return { headers, rows }
 }
 
-function processSheetData(headers: string[], rows: string[][]): SchoolData[] {
+function parseSheetToSchoolInputs(headers: string[], rows: string[][]): SchoolInputData[] {
   console.log('Processing with headers:', headers)
   
   // Find column indices dynamically
   const schoolNameIdx = findColumnIndex(headers, ['school_name', 'schoolname', 'school', 'name', 'institution'])
   const countryIdx = findColumnIndex(headers, ['country', 'nation', 'location'])
-  const schoolTypeIdx = findColumnIndex(headers, ['school_type', 'schooltype', 'type', 'region', 'category'])
-  const criteriaIdx = findColumnIndex(headers, ['criteria', 'criterion', 'category', 'pillar', 'area'])
-  const indicatorIdx = findColumnIndex(headers, ['indicator', 'metric', 'measure', 'kpi'])
-  const scoreIdx = findColumnIndex(headers, ['score', 'value', 'points', 'rating', 'result'])
-  const statusIdx = findColumnIndex(headers, ['status', 'state', 'condition'])
-  const trendIdx = findColumnIndex(headers, ['trend', 'direction', 'change'])
-  const problemIdx = findColumnIndex(headers, ['problem', 'challenge', 'issue', 'weakness'])
-  const solutionIdx = findColumnIndex(headers, ['solution', 'action', 'improvement', 'recommendation'])
+  const regionIdx = findColumnIndex(headers, ['school_type', 'schooltype', 'type', 'region', 'category'])
+  const initiativeIdx = findColumnIndex(headers, ['initiative', 'initiatives', 'project', 'projects'])
+  const activityIdx = findColumnIndex(headers, ['activity', 'activities', 'action', 'actions'])
+  const programIdx = findColumnIndex(headers, ['program', 'programs', 'course', 'courses'])
+  const achievementIdx = findColumnIndex(headers, ['achievement', 'achievements', 'award', 'awards', 'accomplishment'])
+  const challengeIdx = findColumnIndex(headers, ['challenge', 'challenges', 'problem', 'problems', 'issue', 'issues'])
+  const descriptionIdx = findColumnIndex(headers, ['description', 'details', 'about', 'summary', 'info'])
   
-  console.log('Column indices:', { schoolNameIdx, countryIdx, schoolTypeIdx, criteriaIdx, indicatorIdx, scoreIdx, statusIdx, trendIdx, problemIdx, solutionIdx })
+  console.log('Column indices:', { schoolNameIdx, countryIdx, regionIdx, initiativeIdx, activityIdx, programIdx, achievementIdx, challengeIdx, descriptionIdx })
 
-  // If we can't find essential columns, try positional parsing
-  const usePositional = schoolNameIdx === -1 || scoreIdx === -1
-
-  if (usePositional) {
-    console.log('Using positional parsing as fallback')
-  }
-
-  const schoolMap = new Map<string, SchoolData>()
+  const schoolMap = new Map<string, SchoolInputData>()
 
   for (const values of rows) {
-    if (values.length < 3) continue
+    if (values.length < 2) continue
 
-    let schoolName: string
-    let country: string
-    let schoolType: string
-    let criteria: string
-    let indicator: string
-    let score: number
-    let status: string
-    let trend: string
-    let problem: string
-    let solution: string
-
-    if (usePositional) {
-      // Assume common format: school_name, country, school_type, criteria, indicator, score, status, trend, problem, solution
-      // Or without ID column: school_name is first
-      const hasIdColumn = headers.length > 0 && headers[0].toLowerCase().includes('id') && !headers[0].toLowerCase().includes('school')
-      const offset = hasIdColumn ? 1 : 0
-      
-      schoolName = values[offset] || ''
-      country = values[offset + 1] || ''
-      schoolType = values[offset + 2] || ''
-      criteria = values[offset + 3] || ''
-      indicator = values[offset + 4] || ''
-      score = parseFloat(values[offset + 5]) || 0
-      status = values[offset + 6] || ''
-      trend = values[offset + 7] || 'stable'
-      problem = values[offset + 8] || ''
-      solution = values[offset + 9] || ''
-    } else {
-      schoolName = schoolNameIdx >= 0 ? values[schoolNameIdx] || '' : ''
-      country = countryIdx >= 0 ? values[countryIdx] || '' : ''
-      schoolType = schoolTypeIdx >= 0 ? values[schoolTypeIdx] || '' : ''
-      criteria = criteriaIdx >= 0 ? values[criteriaIdx] || '' : ''
-      indicator = indicatorIdx >= 0 ? values[indicatorIdx] || '' : ''
-      score = scoreIdx >= 0 ? parseFloat(values[scoreIdx]) || 0 : 0
-      status = statusIdx >= 0 ? values[statusIdx] || '' : ''
-      trend = trendIdx >= 0 ? values[trendIdx] || 'stable' : 'stable'
-      problem = problemIdx >= 0 ? values[problemIdx] || '' : ''
-      solution = solutionIdx >= 0 ? values[solutionIdx] || '' : ''
-    }
-
+    // Determine school name position
+    const hasIdColumn = headers.length > 0 && headers[0].toLowerCase().includes('id') && !headers[0].toLowerCase().includes('school')
+    const offset = hasIdColumn ? 1 : 0
+    
+    const schoolName = schoolNameIdx >= 0 ? values[schoolNameIdx] || '' : values[offset] || ''
+    const country = countryIdx >= 0 ? values[countryIdx] || '' : values[offset + 1] || ''
+    const region = regionIdx >= 0 ? values[regionIdx] || '' : values[offset + 2] || ''
+    
     // Skip if no school name
     if (!schoolName || schoolName.trim() === '') continue
 
@@ -247,99 +194,281 @@ function processSheetData(headers: string[], rows: string[][]): SchoolData[] {
       schoolMap.set(schoolKey, {
         name: schoolName.trim(),
         country: country.trim(),
-        countryCode: getCountryCode(country),
-        region: schoolType.trim(),
-        sustainabilityScore: 0,
-        sustainabilityProblem: '',
-        sustainabilitySolution: '',
-        communityScore: 0,
-        communityProblem: '',
-        communitySolution: '',
-        wellbeingScore: 0,
-        wellbeingProblem: '',
-        wellbeingSolution: '',
-        innovationScore: 0,
-        innovationProblem: '',
-        innovationSolution: '',
-        globalAwarenessScore: 0,
-        globalAwarenessProblem: '',
-        globalAwarenessSolution: '',
-        trend: 'stable',
-        trendValue: 0,
-        avgScore: 0,
+        region: region.trim(),
+        initiatives: [],
+        activities: [],
+        programs: [],
+        achievements: [],
+        challenges: [],
       })
     }
 
     const school = schoolMap.get(schoolKey)!
-    const category = mapCriteria(criteria || indicator || schoolType)
 
-    // Update the score for this category (take the highest)
-    switch (category) {
-      case 'sustainability':
-        if (score > school.sustainabilityScore) {
-          school.sustainabilityScore = score
-          school.sustainabilityProblem = problem
-          school.sustainabilitySolution = solution
-        }
-        break
-      case 'community':
-        if (score > school.communityScore) {
-          school.communityScore = score
-          school.communityProblem = problem
-          school.communitySolution = solution
-        }
-        break
-      case 'wellbeing':
-        if (score > school.wellbeingScore) {
-          school.wellbeingScore = score
-          school.wellbeingProblem = problem
-          school.wellbeingSolution = solution
-        }
-        break
-      case 'innovation':
-        if (score > school.innovationScore) {
-          school.innovationScore = score
-          school.innovationProblem = problem
-          school.innovationSolution = solution
-        }
-        break
-      case 'globalAwareness':
-        if (score > school.globalAwarenessScore) {
-          school.globalAwarenessScore = score
-          school.globalAwarenessProblem = problem
-          school.globalAwarenessSolution = solution
-        }
-        break
-    }
+    // Collect all relevant text data from the row
+    const initiative = initiativeIdx >= 0 ? values[initiativeIdx] || '' : ''
+    const activity = activityIdx >= 0 ? values[activityIdx] || '' : ''
+    const program = programIdx >= 0 ? values[programIdx] || '' : ''
+    const achievement = achievementIdx >= 0 ? values[achievementIdx] || '' : ''
+    const challenge = challengeIdx >= 0 ? values[challengeIdx] || '' : ''
+    const description = descriptionIdx >= 0 ? values[descriptionIdx] || '' : ''
 
-    // Update trend
-    const trendLower = trend.toLowerCase()
-    if (trendLower.includes('improv') || trendLower.includes('up') || trendLower.includes('increas') || trendLower.includes('grow')) {
-      school.trend = 'up'
-      school.trendValue = Math.max(school.trendValue, 2.5)
-    } else if (trendLower.includes('declin') || trendLower.includes('down') || trendLower.includes('decreas') || trendLower.includes('drop')) {
-      school.trend = 'down'
-      school.trendValue = Math.max(school.trendValue, 1.5)
-    }
-  }
-
-  // Calculate average scores
-  const schools = Array.from(schoolMap.values())
-  for (const school of schools) {
-    const scores = [
-      school.sustainabilityScore,
-      school.communityScore,
-      school.wellbeingScore,
-      school.innovationScore,
-      school.globalAwarenessScore,
-    ].filter(s => s > 0)
+    // Add non-empty values
+    if (initiative) school.initiatives.push(initiative)
+    if (activity) school.activities.push(activity)
+    if (program) school.programs.push(program)
+    if (achievement) school.achievements.push(achievement)
+    if (challenge) school.challenges.push(challenge)
     
-    school.avgScore = scores.length > 0 
-      ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10
-      : 0
+    // If there's a description, try to categorize it
+    if (description) {
+      school.initiatives.push(description)
+    }
+
+    // If we have extra columns not matching known headers, add them as initiatives
+    for (let i = offset + 3; i < values.length; i++) {
+      const val = values[i]?.trim()
+      if (val && val.length > 5 && !val.match(/^\d+$/)) {
+        // Skip if it's the same as already captured
+        if (val !== initiative && val !== activity && val !== program && val !== achievement && val !== challenge && val !== description) {
+          school.initiatives.push(val)
+        }
+      }
+    }
   }
 
-  return schools
+  return Array.from(schoolMap.values())
+}
+
+async function analyzeSchoolWithAI(school: SchoolInputData): Promise<SchoolData> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
+  
+  if (!LOVABLE_API_KEY) {
+    console.warn('LOVABLE_API_KEY not available, using basic scoring')
+    return basicScoring(school)
+  }
+
+  const allContent = [
+    ...school.initiatives,
+    ...school.activities,
+    ...school.programs,
+    ...school.achievements,
+  ].filter(Boolean).join('\n- ')
+
+  const challengesContent = school.challenges.filter(Boolean).join('\n- ')
+
+  const prompt = `Analyze this school's SDG (Sustainable Development Goals) performance based on their initiatives and activities.
+
+School: ${school.name}
+Country: ${school.country}
+Region: ${school.region}
+
+Initiatives, Activities & Programs:
+- ${allContent || 'No specific initiatives provided'}
+
+Challenges:
+- ${challengesContent || 'No specific challenges provided'}
+
+Score this school on these 5 SDG-related categories (0-100 scale):
+1. Sustainability (SDG 7, 12, 13, 14, 15 - renewable energy, responsible consumption, climate action, environmental protection)
+2. Community Engagement (SDG 1, 2, 10, 11 - poverty, hunger, reduced inequalities, sustainable communities)
+3. Wellbeing (SDG 3, 6 - health, wellness, clean water)
+4. Innovation & Education (SDG 4, 8, 9 - quality education, decent work, industry/innovation)
+5. Global Awareness (SDG 5, 16, 17 - gender equality, peace/justice, partnerships)
+
+For each category, also identify one key problem/challenge and suggest a solution based on the data.
+
+Determine the trend: "up" (improving), "down" (declining), or "stable"`
+
+  try {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert in Sustainable Development Goals (SDGs) and school sustainability assessment. Analyze school data and provide accurate scores and insights.'
+          },
+          { role: 'user', content: prompt }
+        ],
+        tools: [
+          {
+            type: 'function',
+            function: {
+              name: 'submit_sdg_scores',
+              description: 'Submit SDG scores and analysis for a school',
+              parameters: {
+                type: 'object',
+                properties: {
+                  sustainability: {
+                    type: 'object',
+                    properties: {
+                      score: { type: 'number', description: 'Score 0-100' },
+                      problem: { type: 'string', description: 'Key challenge identified' },
+                      solution: { type: 'string', description: 'Suggested improvement' }
+                    },
+                    required: ['score', 'problem', 'solution']
+                  },
+                  community: {
+                    type: 'object',
+                    properties: {
+                      score: { type: 'number', description: 'Score 0-100' },
+                      problem: { type: 'string', description: 'Key challenge identified' },
+                      solution: { type: 'string', description: 'Suggested improvement' }
+                    },
+                    required: ['score', 'problem', 'solution']
+                  },
+                  wellbeing: {
+                    type: 'object',
+                    properties: {
+                      score: { type: 'number', description: 'Score 0-100' },
+                      problem: { type: 'string', description: 'Key challenge identified' },
+                      solution: { type: 'string', description: 'Suggested improvement' }
+                    },
+                    required: ['score', 'problem', 'solution']
+                  },
+                  innovation: {
+                    type: 'object',
+                    properties: {
+                      score: { type: 'number', description: 'Score 0-100' },
+                      problem: { type: 'string', description: 'Key challenge identified' },
+                      solution: { type: 'string', description: 'Suggested improvement' }
+                    },
+                    required: ['score', 'problem', 'solution']
+                  },
+                  globalAwareness: {
+                    type: 'object',
+                    properties: {
+                      score: { type: 'number', description: 'Score 0-100' },
+                      problem: { type: 'string', description: 'Key challenge identified' },
+                      solution: { type: 'string', description: 'Suggested improvement' }
+                    },
+                    required: ['score', 'problem', 'solution']
+                  },
+                  trend: { type: 'string', enum: ['up', 'down', 'stable'] }
+                },
+                required: ['sustainability', 'community', 'wellbeing', 'innovation', 'globalAwareness', 'trend']
+              }
+            }
+          }
+        ],
+        tool_choice: { type: 'function', function: { name: 'submit_sdg_scores' } }
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('AI API error:', response.status, errorText)
+      return basicScoring(school)
+    }
+
+    const data = await response.json()
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0]
+    
+    if (toolCall?.function?.arguments) {
+      const scores = JSON.parse(toolCall.function.arguments)
+      
+      const sustainabilityScore = Math.min(100, Math.max(0, scores.sustainability?.score || 50))
+      const communityScore = Math.min(100, Math.max(0, scores.community?.score || 50))
+      const wellbeingScore = Math.min(100, Math.max(0, scores.wellbeing?.score || 50))
+      const innovationScore = Math.min(100, Math.max(0, scores.innovation?.score || 50))
+      const globalAwarenessScore = Math.min(100, Math.max(0, scores.globalAwareness?.score || 50))
+      
+      const avgScore = Math.round((sustainabilityScore + communityScore + wellbeingScore + innovationScore + globalAwarenessScore) / 5)
+
+      return {
+        name: school.name,
+        country: school.country,
+        countryCode: getCountryCode(school.country),
+        region: school.region,
+        sustainabilityScore,
+        sustainabilityProblem: scores.sustainability?.problem || '',
+        sustainabilitySolution: scores.sustainability?.solution || '',
+        communityScore,
+        communityProblem: scores.community?.problem || '',
+        communitySolution: scores.community?.solution || '',
+        wellbeingScore,
+        wellbeingProblem: scores.wellbeing?.problem || '',
+        wellbeingSolution: scores.wellbeing?.solution || '',
+        innovationScore,
+        innovationProblem: scores.innovation?.problem || '',
+        innovationSolution: scores.innovation?.solution || '',
+        globalAwarenessScore,
+        globalAwarenessProblem: scores.globalAwareness?.problem || '',
+        globalAwarenessSolution: scores.globalAwareness?.solution || '',
+        trend: scores.trend || 'stable',
+        trendValue: scores.trend === 'up' ? 2.5 : scores.trend === 'down' ? -1.5 : 0,
+        avgScore,
+      }
+    }
+    
+    return basicScoring(school)
+  } catch (error) {
+    console.error('AI analysis error:', error)
+    return basicScoring(school)
+  }
+}
+
+// Basic keyword-based scoring as fallback
+function basicScoring(school: SchoolInputData): SchoolData {
+  const allText = [
+    ...school.initiatives,
+    ...school.activities,
+    ...school.programs,
+    ...school.achievements,
+  ].join(' ').toLowerCase()
+
+  // Keyword-based scoring
+  const sustainabilityKeywords = ['solar', 'recycl', 'green', 'eco', 'carbon', 'environment', 'renewable', 'waste', 'energy', 'climate', 'sustainable', 'biodiversity', 'conservation']
+  const communityKeywords = ['volunteer', 'community', 'outreach', 'service', 'donation', 'charity', 'help', 'support', 'local', 'neighborhood', 'poverty', 'hunger']
+  const wellbeingKeywords = ['health', 'wellness', 'mental', 'mindful', 'yoga', 'sports', 'fitness', 'counseling', 'safety', 'nutrition', 'physical', 'wellbeing']
+  const innovationKeywords = ['stem', 'steam', 'coding', 'robot', 'tech', 'innovation', 'research', 'project', 'digital', 'ai', 'science', 'lab', 'experiment']
+  const globalKeywords = ['international', 'global', 'exchange', 'diversity', 'inclusion', 'cultural', 'multicultural', 'language', 'partnership', 'mun', 'united nations']
+
+  const countKeywords = (text: string, keywords: string[]) => {
+    return keywords.filter(k => text.includes(k)).length
+  }
+
+  const baseScore = 40
+  const maxBonus = 50
+
+  const sustainabilityScore = Math.min(100, baseScore + (countKeywords(allText, sustainabilityKeywords) / sustainabilityKeywords.length) * maxBonus + Math.random() * 10)
+  const communityScore = Math.min(100, baseScore + (countKeywords(allText, communityKeywords) / communityKeywords.length) * maxBonus + Math.random() * 10)
+  const wellbeingScore = Math.min(100, baseScore + (countKeywords(allText, wellbeingKeywords) / wellbeingKeywords.length) * maxBonus + Math.random() * 10)
+  const innovationScore = Math.min(100, baseScore + (countKeywords(allText, innovationKeywords) / innovationKeywords.length) * maxBonus + Math.random() * 10)
+  const globalAwarenessScore = Math.min(100, baseScore + (countKeywords(allText, globalKeywords) / globalKeywords.length) * maxBonus + Math.random() * 10)
+
+  const avgScore = Math.round((sustainabilityScore + communityScore + wellbeingScore + innovationScore + globalAwarenessScore) / 5)
+
+  return {
+    name: school.name,
+    country: school.country,
+    countryCode: getCountryCode(school.country),
+    region: school.region,
+    sustainabilityScore: Math.round(sustainabilityScore),
+    sustainabilityProblem: 'Limited data for detailed analysis',
+    sustainabilitySolution: 'Provide more detailed information about sustainability initiatives',
+    communityScore: Math.round(communityScore),
+    communityProblem: 'Community engagement metrics need more detail',
+    communitySolution: 'Document community outreach programs and volunteer hours',
+    wellbeingScore: Math.round(wellbeingScore),
+    wellbeingProblem: 'Wellbeing programs documentation limited',
+    wellbeingSolution: 'Track and report on student wellness initiatives',
+    innovationScore: Math.round(innovationScore),
+    innovationProblem: 'Innovation metrics require more context',
+    innovationSolution: 'Detail STEM/STEAM programs and student projects',
+    globalAwarenessScore: Math.round(globalAwarenessScore),
+    globalAwarenessProblem: 'Global engagement details needed',
+    globalAwarenessSolution: 'Document international partnerships and cultural programs',
+    trend: 'stable',
+    trendValue: 0,
+    avgScore,
+  }
 }
 
 Deno.serve(async (req) => {
@@ -349,7 +478,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log('Starting Google Sheets sync...')
+    console.log('Starting Google Sheets sync with AI analysis...')
 
     // Initialize Supabase client with service role key
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -406,16 +535,16 @@ Deno.serve(async (req) => {
       throw new Error('No data rows found in the Google Sheet.')
     }
 
-    // Process and aggregate data
-    const schools = processSheetData(headers, rows)
-    console.log(`Processed ${schools.length} schools`)
+    // Parse sheet into school inputs
+    const schoolInputs = parseSheetToSchoolInputs(headers, rows)
+    console.log(`Found ${schoolInputs.length} schools to analyze`)
 
-    if (schools.length === 0) {
-      throw new Error('No valid school data found. Please check that your sheet has the correct column format with school names and scores.')
+    if (schoolInputs.length === 0) {
+      throw new Error('No valid school data found. Please check that your sheet has school names and relevant data.')
     }
 
-    // Log first school for debugging
-    console.log('First school:', JSON.stringify(schools[0], null, 2))
+    // Log first school input for debugging
+    console.log('First school input:', JSON.stringify(schoolInputs[0], null, 2))
 
     // Create a sync log entry
     const { data: syncLog, error: syncLogError } = await supabase
@@ -431,6 +560,26 @@ Deno.serve(async (req) => {
     if (syncLogError) {
       console.error('Error creating sync log:', syncLogError)
     }
+
+    // Analyze each school with AI (process in batches to avoid rate limits)
+    console.log('Analyzing schools with AI...')
+    const schools: SchoolData[] = []
+    
+    for (let i = 0; i < schoolInputs.length; i++) {
+      console.log(`Analyzing school ${i + 1}/${schoolInputs.length}: ${schoolInputs[i].name}`)
+      const schoolData = await analyzeSchoolWithAI(schoolInputs[i])
+      schools.push(schoolData)
+      
+      // Small delay between API calls to avoid rate limiting
+      if (i < schoolInputs.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+    }
+
+    console.log(`Analyzed ${schools.length} schools`)
+
+    // Log first analyzed school for debugging
+    console.log('First analyzed school:', JSON.stringify(schools[0], null, 2))
 
     // Delete existing schools and insert fresh data
     console.log('Clearing existing schools...')
@@ -465,7 +614,6 @@ Deno.serve(async (req) => {
       global_awareness_score: school.globalAwarenessScore,
       global_awareness_problem: school.globalAwarenessProblem,
       global_awareness_solution: school.globalAwarenessSolution,
-      // Note: avg_score is a generated column, don't insert it
       trend: school.trend,
       trend_value: school.trendValue,
     }))
@@ -507,22 +655,21 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Synced ${insertedSchools?.length || 0} schools from Google Sheets`,
+        message: `Successfully synced and analyzed ${insertedSchools?.length || 0} schools`,
         recordsSynced: insertedSchools?.length || 0,
-        schools: insertedSchools?.length || 0
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200
       }
     )
+
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    console.error('Sync error:', errorMessage)
+    console.error('Sync error:', error)
     return new Response(
       JSON.stringify({
         success: false,
-        error: errorMessage
+        error: error instanceof Error ? error.message : 'Unknown error'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
