@@ -21,9 +21,9 @@ export interface DbSchool {
   innovation_score: number | null;
   innovation_problem: string | null;
   innovation_solution: string | null;
-  global_awareness_score: number | null;
-  global_awareness_problem: string | null;
-  global_awareness_solution: string | null;
+  academic_excellence_score: number | null;
+  academic_excellence_problem: string | null;
+  academic_excellence_solution: string | null;
   avg_score: number | null;
   trend: string | null;
   trend_value: number | null;
@@ -45,8 +45,8 @@ export function transformDbSchool(dbSchool: DbSchool): School {
     communityEngagement: dbSchool.community_score ?? 0,
     wellbeing: dbSchool.wellbeing_score ?? 0,
     innovation: dbSchool.innovation_score ?? 0,
-    globalAwareness: dbSchool.global_awareness_score ?? 0,
-    academicExcellence: 0, // Not in DB, default to 0
+    academicExcellence: dbSchool.academic_excellence_score ?? 0,
+    globalAwareness: 0, // Legacy field, not used
     avgScore: dbSchool.avg_score ?? 0,
     trend: trend ?? 'stable',
     trendValue: dbSchool.trend_value ?? 0,
@@ -55,14 +55,14 @@ export function transformDbSchool(dbSchool: DbSchool): School {
       dbSchool.community_problem,
       dbSchool.wellbeing_problem,
       dbSchool.innovation_problem,
-      dbSchool.global_awareness_problem,
+      dbSchool.academic_excellence_problem,
     ].filter(Boolean) as string[],
     solutions: [
       dbSchool.sustainability_solution,
       dbSchool.community_solution,
       dbSchool.wellbeing_solution,
       dbSchool.innovation_solution,
-      dbSchool.global_awareness_solution,
+      dbSchool.academic_excellence_solution,
     ].filter(Boolean) as string[],
     lastUpdated: dbSchool.updated_at,
   };
