@@ -257,7 +257,7 @@ export default function SetupPage() {
                 
                 <div className="bg-primary/10 rounded-lg p-3 mt-3">
                   <p className="text-xs text-primary font-medium">
-                    🤖 AI-Powered Scoring: Just describe your initiatives and activities - our AI automatically analyzes them to generate SDG scores for Sustainability, Community, Wellbeing, Innovation, and Global Awareness.
+                    🤖 AI-Powered Scoring: Just describe your initiatives and activities - our AI automatically analyzes them to generate SDG scores for Sustainability, Community, Wellbeing, Innovation, and Academic Excellence.
                   </p>
                 </div>
               </div>
