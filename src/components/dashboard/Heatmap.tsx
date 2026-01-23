@@ -13,7 +13,7 @@ const heatmapCriteria = [
   { key: 'communityEngagement', label: 'Community', shortLabel: 'Comm' },
   { key: 'wellbeing', label: 'Wellbeing', shortLabel: 'Well' },
   { key: 'innovation', label: 'Innovation', shortLabel: 'Inno' },
-  { key: 'academicExcellence', label: 'Academic Excellence', shortLabel: 'Acad' },
+  { key: 'globalAwareness', label: 'Global Awareness', shortLabel: 'Glob' },
 ] as const;
 
 export function Heatmap({ schools: schoolsProp }: HeatmapProps) {

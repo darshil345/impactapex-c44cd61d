@@ -266,7 +266,7 @@ export const criteria = [
   { key: 'sustainability', label: 'Sustainability', color: 'hsl(160 45% 50%)' },
   { key: 'communityEngagement', label: 'Community Engagement', color: 'hsl(210 80% 55%)' },
   { key: 'wellbeing', label: 'Wellbeing', color: 'hsl(270 60% 65%)' },
-  { key: 'academicExcellence', label: 'Academic Excellence', color: 'hsl(25 90% 60%)' },
+  { key: 'globalAwareness', label: 'Global Awareness', color: 'hsl(25 90% 60%)' },
   { key: 'innovation', label: 'Innovation', color: 'hsl(340 70% 60%)' },
   { key: 'academicExcellence', label: 'Academic Excellence', color: 'hsl(45 90% 55%)' },
 ] as const;
