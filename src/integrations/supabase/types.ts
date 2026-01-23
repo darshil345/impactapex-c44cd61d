@@ -55,9 +55,6 @@ export type Database = {
       }
       schools: {
         Row: {
-          academic_excellence_problem: string | null
-          academic_excellence_score: number | null
-          academic_excellence_solution: string | null
           avg_score: number | null
           community_problem: string | null
           community_score: number | null
@@ -65,6 +62,9 @@ export type Database = {
           country: string
           country_code: string
           created_at: string
+          global_awareness_problem: string | null
+          global_awareness_score: number | null
+          global_awareness_solution: string | null
           id: string
           innovation_problem: string | null
           innovation_score: number | null
@@ -82,9 +82,6 @@ export type Database = {
           wellbeing_solution: string | null
         }
         Insert: {
-          academic_excellence_problem?: string | null
-          academic_excellence_score?: number | null
-          academic_excellence_solution?: string | null
           avg_score?: number | null
           community_problem?: string | null
           community_score?: number | null
@@ -92,6 +89,9 @@ export type Database = {
           country: string
           country_code: string
           created_at?: string
+          global_awareness_problem?: string | null
+          global_awareness_score?: number | null
+          global_awareness_solution?: string | null
           id?: string
           innovation_problem?: string | null
           innovation_score?: number | null
@@ -109,9 +109,6 @@ export type Database = {
           wellbeing_solution?: string | null
         }
         Update: {
-          academic_excellence_problem?: string | null
-          academic_excellence_score?: number | null
-          academic_excellence_solution?: string | null
           avg_score?: number | null
           community_problem?: string | null
           community_score?: number | null
@@ -119,6 +116,9 @@ export type Database = {
           country?: string
           country_code?: string
           created_at?: string
+          global_awareness_problem?: string | null
+          global_awareness_score?: number | null
+          global_awareness_solution?: string | null
           id?: string
           innovation_problem?: string | null
           innovation_score?: number | null

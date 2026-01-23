@@ -224,6 +224,7 @@ export default function SetupPage() {
                         <th className="border border-border p-2 text-left font-semibold">Initiatives</th>
                         <th className="border border-border p-2 text-left font-semibold">Activities</th>
                         <th className="border border-border p-2 text-left font-semibold">Achievements</th>
+                        <th className="border border-border p-2 text-left font-semibold">Global Awareness</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -234,6 +235,7 @@ export default function SetupPage() {
                         <td className="border border-border p-2">Solar panels, rainwater harvesting</td>
                         <td className="border border-border p-2">Beach cleanup, tree planting</td>
                         <td className="border border-border p-2">National Green School Award</td>
+                        <td className="border border-border p-2">Sister school exchange with Japan</td>
                       </tr>
                       <tr className="bg-muted/30">
                         <td className="border border-border p-2">Innovation Academy</td>
@@ -242,6 +244,7 @@ export default function SetupPage() {
                         <td className="border border-border p-2">STEM lab, coding bootcamp</td>
                         <td className="border border-border p-2">Robotics competitions, hackathons</td>
                         <td className="border border-border p-2">Best Innovation Program 2024</td>
+                        <td className="border border-border p-2">International coding partnerships</td>
                       </tr>
                       <tr>
                         <td className="border border-border p-2">Global Minds Academy</td>
@@ -250,6 +253,7 @@ export default function SetupPage() {
                         <td className="border border-border p-2">Cultural exchange, MUN club</td>
                         <td className="border border-border p-2">International student programs</td>
                         <td className="border border-border p-2">UNESCO Associated School</td>
+                        <td className="border border-border p-2">MUN conferences, global citizenship</td>
                       </tr>
                     </tbody>
                   </table>
@@ -257,7 +261,7 @@ export default function SetupPage() {
                 
                 <div className="bg-primary/10 rounded-lg p-3 mt-3">
                   <p className="text-xs text-primary font-medium">
-                    🤖 AI-Powered Scoring: Just describe your initiatives and activities - our AI automatically analyzes them to generate SDG scores for Sustainability, Community, Wellbeing, Innovation, and Academic Excellence.
+                    🤖 AI-Powered Scoring: Just describe your initiatives and activities - our AI automatically analyzes them to generate SDG scores for Sustainability, Community, Wellbeing, Innovation, and Global Awareness.
                   </p>
                 </div>
               </div>

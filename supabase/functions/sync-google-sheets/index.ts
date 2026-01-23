@@ -22,9 +22,9 @@ interface SchoolData {
   innovationScore: number
   innovationProblem: string
   innovationSolution: string
-  academicExcellenceScore: number
-  academicExcellenceProblem: string
-  academicExcellenceSolution: string
+  globalAwarenessScore: number
+  globalAwarenessProblem: string
+  globalAwarenessSolution: string
   trend: string
   trendValue: number
   avgScore: number
@@ -169,8 +169,9 @@ function parseSheetToSchoolInputs(headers: string[], rows: string[][]): SchoolIn
   const achievementIdx = findColumnIndex(headers, ['achievement', 'achievements', 'award', 'awards', 'accomplishment'])
   const challengeIdx = findColumnIndex(headers, ['challenge', 'challenges', 'problem', 'problems', 'issue', 'issues'])
   const descriptionIdx = findColumnIndex(headers, ['description', 'details', 'about', 'summary', 'info'])
+  const globalIdx = findColumnIndex(headers, ['global', 'global_awareness', 'international', 'exchange', 'partnership'])
   
-  console.log('Column indices:', { schoolNameIdx, countryIdx, regionIdx, initiativeIdx, activityIdx, programIdx, achievementIdx, challengeIdx, descriptionIdx })
+  console.log('Column indices:', { schoolNameIdx, countryIdx, regionIdx, initiativeIdx, activityIdx, programIdx, achievementIdx, challengeIdx, descriptionIdx, globalIdx })
 
   const schoolMap = new Map<string, SchoolInputData>()
 
@@ -212,6 +213,7 @@ function parseSheetToSchoolInputs(headers: string[], rows: string[][]): SchoolIn
     const achievement = achievementIdx >= 0 ? values[achievementIdx] || '' : ''
     const challenge = challengeIdx >= 0 ? values[challengeIdx] || '' : ''
     const description = descriptionIdx >= 0 ? values[descriptionIdx] || '' : ''
+    const globalAwareness = globalIdx >= 0 ? values[globalIdx] || '' : ''
 
     // Add non-empty values
     if (initiative) school.initiatives.push(initiative)
@@ -219,6 +221,7 @@ function parseSheetToSchoolInputs(headers: string[], rows: string[][]): SchoolIn
     if (program) school.programs.push(program)
     if (achievement) school.achievements.push(achievement)
     if (challenge) school.challenges.push(challenge)
+    if (globalAwareness) school.initiatives.push(globalAwareness)
     
     // If there's a description, try to categorize it
     if (description) {
@@ -230,7 +233,7 @@ function parseSheetToSchoolInputs(headers: string[], rows: string[][]): SchoolIn
       const val = values[i]?.trim()
       if (val && val.length > 5 && !val.match(/^\d+$/)) {
         // Skip if it's the same as already captured
-        if (val !== initiative && val !== activity && val !== program && val !== achievement && val !== challenge && val !== description) {
+        if (val !== initiative && val !== activity && val !== program && val !== achievement && val !== challenge && val !== description && val !== globalAwareness) {
           school.initiatives.push(val)
         }
       }
@@ -274,7 +277,7 @@ Score this school on these 5 SDG-related categories (0-100 scale):
 2. Community Engagement (SDG 1, 2, 10, 11 - poverty, hunger, reduced inequalities, sustainable communities)
 3. Wellbeing (SDG 3, 6 - health, wellness, clean water)
 4. Innovation & Education (SDG 4, 8, 9 - quality education, decent work, industry/innovation)
-5. Academic Excellence (SDG 4 - quality education, learning outcomes, academic achievements, exam results, teaching quality)
+5. Global Awareness (SDG 5, 16, 17 - gender equality, peace/justice, international partnerships, cultural exchange, global citizenship)
 
 For each category, also identify one key problem/challenge and suggest a solution based on the data.
 
@@ -341,7 +344,7 @@ Determine the trend: "up" (improving), "down" (declining), or "stable"`
                     },
                     required: ['score', 'problem', 'solution']
                   },
-                  academicExcellence: {
+                  globalAwareness: {
                     type: 'object',
                     properties: {
                       score: { type: 'number', description: 'Score 0-100' },
@@ -352,7 +355,7 @@ Determine the trend: "up" (improving), "down" (declining), or "stable"`
                   },
                   trend: { type: 'string', enum: ['up', 'down', 'stable'] }
                 },
-                required: ['sustainability', 'community', 'wellbeing', 'innovation', 'academicExcellence', 'trend']
+                required: ['sustainability', 'community', 'wellbeing', 'innovation', 'globalAwareness', 'trend']
               }
             }
           }
@@ -377,9 +380,9 @@ Determine the trend: "up" (improving), "down" (declining), or "stable"`
       const communityScore = Math.min(100, Math.max(0, scores.community?.score || 50))
       const wellbeingScore = Math.min(100, Math.max(0, scores.wellbeing?.score || 50))
       const innovationScore = Math.min(100, Math.max(0, scores.innovation?.score || 50))
-      const academicExcellenceScore = Math.min(100, Math.max(0, scores.academicExcellence?.score || 50))
+      const globalAwarenessScore = Math.min(100, Math.max(0, scores.globalAwareness?.score || 50))
       
-      const avgScore = Math.round((sustainabilityScore + communityScore + wellbeingScore + innovationScore + academicExcellenceScore) / 5)
+      const avgScore = Math.round((sustainabilityScore + communityScore + wellbeingScore + innovationScore + globalAwarenessScore) / 5)
 
       return {
         name: school.name,
@@ -398,9 +401,9 @@ Determine the trend: "up" (improving), "down" (declining), or "stable"`
         innovationScore,
         innovationProblem: scores.innovation?.problem || '',
         innovationSolution: scores.innovation?.solution || '',
-        academicExcellenceScore,
-        academicExcellenceProblem: scores.academicExcellence?.problem || '',
-        academicExcellenceSolution: scores.academicExcellence?.solution || '',
+        globalAwarenessScore,
+        globalAwarenessProblem: scores.globalAwareness?.problem || '',
+        globalAwarenessSolution: scores.globalAwareness?.solution || '',
         trend: scores.trend || 'stable',
         trendValue: scores.trend === 'up' ? 2.5 : scores.trend === 'down' ? -1.5 : 0,
         avgScore,
@@ -428,7 +431,7 @@ function basicScoring(school: SchoolInputData): SchoolData {
   const communityKeywords = ['volunteer', 'community', 'outreach', 'service', 'donation', 'charity', 'help', 'support', 'local', 'neighborhood', 'poverty', 'hunger']
   const wellbeingKeywords = ['health', 'wellness', 'mental', 'mindful', 'yoga', 'sports', 'fitness', 'counseling', 'safety', 'nutrition', 'physical', 'wellbeing']
   const innovationKeywords = ['stem', 'steam', 'coding', 'robot', 'tech', 'innovation', 'research', 'project', 'digital', 'ai', 'science', 'lab', 'experiment']
-  const academicKeywords = ['academic', 'exam', 'grade', 'score', 'achievement', 'curriculum', 'learning', 'teaching', 'education', 'study', 'scholarship', 'university', 'olympiad']
+  const globalKeywords = ['international', 'global', 'exchange', 'diversity', 'inclusion', 'cultural', 'multicultural', 'language', 'partnership', 'mun', 'united nations', 'gender', 'peace']
 
   const countKeywords = (text: string, keywords: string[]) => {
     return keywords.filter(k => text.includes(k)).length
@@ -441,9 +444,9 @@ function basicScoring(school: SchoolInputData): SchoolData {
   const communityScore = Math.min(100, baseScore + (countKeywords(allText, communityKeywords) / communityKeywords.length) * maxBonus + Math.random() * 10)
   const wellbeingScore = Math.min(100, baseScore + (countKeywords(allText, wellbeingKeywords) / wellbeingKeywords.length) * maxBonus + Math.random() * 10)
   const innovationScore = Math.min(100, baseScore + (countKeywords(allText, innovationKeywords) / innovationKeywords.length) * maxBonus + Math.random() * 10)
-  const academicExcellenceScore = Math.min(100, baseScore + (countKeywords(allText, academicKeywords) / academicKeywords.length) * maxBonus + Math.random() * 10)
+  const globalAwarenessScore = Math.min(100, baseScore + (countKeywords(allText, globalKeywords) / globalKeywords.length) * maxBonus + Math.random() * 10)
 
-  const avgScore = Math.round((sustainabilityScore + communityScore + wellbeingScore + innovationScore + academicExcellenceScore) / 5)
+  const avgScore = Math.round((sustainabilityScore + communityScore + wellbeingScore + innovationScore + globalAwarenessScore) / 5)
 
   return {
     name: school.name,
@@ -462,9 +465,9 @@ function basicScoring(school: SchoolInputData): SchoolData {
     innovationScore: Math.round(innovationScore),
     innovationProblem: 'Innovation metrics require more context',
     innovationSolution: 'Detail STEM/STEAM programs and student projects',
-    academicExcellenceScore: Math.round(academicExcellenceScore),
-    academicExcellenceProblem: 'Academic achievement details needed',
-    academicExcellenceSolution: 'Document exam results, curriculum quality, and learning outcomes',
+    globalAwarenessScore: Math.round(globalAwarenessScore),
+    globalAwarenessProblem: 'Global engagement details needed',
+    globalAwarenessSolution: 'Document international partnerships and cultural exchange programs',
     trend: 'stable',
     trendValue: 0,
     avgScore,
@@ -611,9 +614,9 @@ Deno.serve(async (req) => {
       innovation_score: school.innovationScore,
       innovation_problem: school.innovationProblem,
       innovation_solution: school.innovationSolution,
-      academic_excellence_score: school.academicExcellenceScore,
-      academic_excellence_problem: school.academicExcellenceProblem,
-      academic_excellence_solution: school.academicExcellenceSolution,
+      global_awareness_score: school.globalAwarenessScore,
+      global_awareness_problem: school.globalAwarenessProblem,
+      global_awareness_solution: school.globalAwarenessSolution,
       trend: school.trend,
       trend_value: school.trendValue,
     }))
