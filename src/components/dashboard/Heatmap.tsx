@@ -17,8 +17,15 @@ const heatmapCriteria = [
 ] as const;
 
 export function Heatmap({ schools: schoolsProp }: HeatmapProps) {
-  const { canAccess } = useTier();
-  const hasHeatmap = canAccess('heatmap');
+  // Safe access to tier context - provide default if not in provider
+  let hasHeatmap = true;
+  try {
+    const { canAccess } = useTier();
+    hasHeatmap = canAccess('heatmap');
+  } catch {
+    // If useTier fails (e.g., during hot reload), default to showing content
+    hasHeatmap = true;
+  }
 
   const getColor = (score: number): string => {
     if (score === 0) return 'bg-muted/50';
