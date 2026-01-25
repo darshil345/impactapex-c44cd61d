@@ -668,15 +668,32 @@ Deno.serve(async (req) => {
     )
 
   } catch (error) {
+    // NOTE: supabase-js often returns plain objects (e.g. PostgrestError) rather than Error instances.
+    // If we only rely on `instanceof Error`, the client sees "Unknown error" which makes debugging impossible.
     console.error('Sync error:', error)
+
+    const errAny = error as any
+    const message =
+      (typeof errAny?.message === 'string' && errAny.message) ||
+      (typeof errAny?.error === 'string' && errAny.error) ||
+      (typeof error === 'string' && error) ||
+      'Unknown error'
+
+    const code = typeof errAny?.code === 'string' ? errAny.code : undefined
+    const details = typeof errAny?.details === 'string' ? errAny.details : undefined
+    const hint = typeof errAny?.hint === 'string' ? errAny.hint : undefined
+
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: message,
+        code,
+        details,
+        hint,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
+        status: 500,
       }
     )
   }
