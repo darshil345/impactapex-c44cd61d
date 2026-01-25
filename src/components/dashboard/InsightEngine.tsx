@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 export function InsightEngine() {
   const { currentTier } = useTier();
-  const isPro = currentTier === 'pro' || currentTier === 'enterprise';
+  const isPro = currentTier === 'pro';
   
   const visibleInsights = isPro ? insights : insights.slice(0, 2);
 

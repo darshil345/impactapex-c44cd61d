@@ -259,7 +259,7 @@ export const criteria = [
 
 export const freeCriteria = ['sustainability', 'communityEngagement', 'wellbeing'];
 
-export type SubscriptionTier = 'free' | 'plus' | 'pro' | 'enterprise';
+export type SubscriptionTier = 'free' | 'pro';
 
 export interface TierFeatures {
   maxSchools: number;
@@ -273,14 +273,14 @@ export interface TierFeatures {
   customIndicators: boolean;
   evidenceUpload: boolean;
   publicProfile: boolean;
-  whiteLabelBranding: boolean;
-  historicalComparison: boolean;
+  aiInsights: boolean;
+  prioritySupport: boolean;
   apiAccess: boolean;
 }
 
 export const tierFeatures: Record<SubscriptionTier, TierFeatures> = {
   free: {
-    maxSchools: 3,
+    maxSchools: 5,
     allCriteria: false,
     leaderboard: false,
     comparison: false,
@@ -291,24 +291,8 @@ export const tierFeatures: Record<SubscriptionTier, TierFeatures> = {
     customIndicators: false,
     evidenceUpload: false,
     publicProfile: false,
-    whiteLabelBranding: false,
-    historicalComparison: false,
-    apiAccess: false,
-  },
-  plus: {
-    maxSchools: 10,
-    allCriteria: true,
-    leaderboard: true,
-    comparison: true,
-    radarChart: true,
-    heatmap: true,
-    trendAnalysis: true,
-    pdfExport: true,
-    customIndicators: false,
-    evidenceUpload: false,
-    publicProfile: false,
-    whiteLabelBranding: false,
-    historicalComparison: false,
+    aiInsights: false,
+    prioritySupport: false,
     apiAccess: false,
   },
   pro: {
@@ -323,34 +307,29 @@ export const tierFeatures: Record<SubscriptionTier, TierFeatures> = {
     customIndicators: true,
     evidenceUpload: true,
     publicProfile: true,
-    whiteLabelBranding: true,
-    historicalComparison: true,
-    apiAccess: true,
-  },
-  enterprise: {
-    maxSchools: Infinity,
-    allCriteria: true,
-    leaderboard: true,
-    comparison: true,
-    radarChart: true,
-    heatmap: true,
-    trendAnalysis: true,
-    pdfExport: true,
-    customIndicators: true,
-    evidenceUpload: true,
-    publicProfile: true,
-    whiteLabelBranding: true,
-    historicalComparison: true,
+    aiInsights: true,
+    prioritySupport: true,
     apiAccess: true,
   },
 };
 
-export const tierInfo: Record<SubscriptionTier, { name: string; tagline: string; price: string; color: string }> = {
-  free: { name: 'Explore', tagline: 'Discover impact tracking', price: 'Free', color: 'hsl(var(--muted-foreground))' },
-  plus: { name: 'Compete', tagline: 'Join the league', price: '$29/mo', color: 'hsl(var(--plus))' },
-  pro: { name: 'Lead', tagline: 'Premium insights', price: '$99/mo', color: 'hsl(var(--pro))' },
-  enterprise: { name: 'Enterprise', tagline: 'District-wide', price: 'Custom', color: 'hsl(var(--primary))' },
+export const tierInfo: Record<SubscriptionTier, { name: string; tagline: string; price: string; monthlyPrice: number; color: string }> = {
+  free: { name: 'Free', tagline: 'Get started with impact tracking', price: 'Free', monthlyPrice: 0, color: 'hsl(var(--muted-foreground))' },
+  pro: { name: 'Pro', tagline: 'Unlimited schools & premium features', price: '$20/mo', monthlyPrice: 20, color: 'hsl(var(--primary))' },
 };
+
+export const proFeaturesList = [
+  { name: 'Unlimited Schools', description: 'Track unlimited schools across your network' },
+  { name: 'All SDG Criteria', description: 'Access all 5 SDG performance metrics' },
+  { name: 'Global Leaderboard', description: 'Compare your schools worldwide' },
+  { name: 'School Comparison', description: 'Side-by-side radar chart comparisons' },
+  { name: 'Performance Heatmap', description: 'Visual score distribution analysis' },
+  { name: 'Trend Analysis', description: 'Track improvement over time' },
+  { name: 'PDF Reports', description: 'Export professional reports' },
+  { name: 'AI-Powered Insights', description: 'Get smart recommendations' },
+  { name: 'Priority Support', description: '24/7 email support' },
+  { name: 'API Access', description: 'Integrate with your systems' },
+];
 
 export const insights = [
   "Mental wellbeing is a shared challenge across 67% of schools globally.",

@@ -92,7 +92,7 @@ export function RadarComparison({ schools }: RadarComparisonProps) {
 
   if (!hasRadar) {
     return (
-      <LockedFeature feature="radarChart" requiredTier="plus">
+      <LockedFeature feature="radarChart" requiredTier="pro">
         {content}
       </LockedFeature>
     );

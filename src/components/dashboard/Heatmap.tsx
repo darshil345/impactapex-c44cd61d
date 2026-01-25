@@ -146,7 +146,7 @@ export function Heatmap({ schools: schoolsProp }: HeatmapProps) {
 
   if (!hasHeatmap) {
     return (
-      <LockedFeature feature="heatmap" requiredTier="plus">
+      <LockedFeature feature="heatmap" requiredTier="pro">
         {content}
       </LockedFeature>
     );

@@ -94,7 +94,7 @@ export function Leaderboard({ onSchoolClick, selectedSchool, schools }: Leaderbo
 
   if (!hasLeaderboard) {
     return (
-      <LockedFeature feature="leaderboard" requiredTier="plus">
+      <LockedFeature feature="leaderboard" requiredTier="pro">
         {content}
       </LockedFeature>
     );
