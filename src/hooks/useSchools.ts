@@ -46,7 +46,6 @@ export function transformDbSchool(dbSchool: DbSchool): School {
     wellbeing: dbSchool.wellbeing_score ?? 0,
     innovation: dbSchool.innovation_score ?? 0,
     globalAwareness: dbSchool.global_awareness_score ?? 0,
-    academicExcellence: 0, // Not in DB, default to 0
     avgScore: dbSchool.avg_score ?? 0,
     trend: trend ?? 'stable',
     trendValue: dbSchool.trend_value ?? 0,
