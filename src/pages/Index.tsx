@@ -69,7 +69,6 @@ function Dashboard() {
       wellbeing: schools.reduce((acc, s) => acc + s.wellbeing, 0) / schools.length,
       globalAwareness: schools.reduce((acc, s) => acc + s.globalAwareness, 0) / schools.length,
       innovation: schools.reduce((acc, s) => acc + s.innovation, 0) / schools.length,
-      academicExcellence: schools.reduce((acc, s) => acc + s.academicExcellence, 0) / schools.length,
     };
     
     const strongestCriteria = Object.entries(criteriaAverages).sort((a, b) => b[1] - a[1])[0];
