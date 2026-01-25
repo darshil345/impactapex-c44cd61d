@@ -1,13 +1,11 @@
 import { useTier } from '@/contexts/TierContext';
 import { tierInfo, SubscriptionTier } from '@/lib/mockData';
-import { Crown, Sparkles, Zap, Building2 } from 'lucide-react';
+import { Crown, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const tierIcons: Record<SubscriptionTier, React.ReactNode> = {
   free: null,
-  plus: <Zap className="h-3.5 w-3.5" />,
   pro: <Crown className="h-3.5 w-3.5" />,
-  enterprise: <Building2 className="h-3.5 w-3.5" />,
 };
 
 interface TierBadgeProps {
@@ -23,9 +21,7 @@ export function TierBadge({ tier, showUpgrade = true, className }: TierBadgeProp
 
   const badgeStyles: Record<SubscriptionTier, string> = {
     free: 'bg-muted text-muted-foreground',
-    plus: 'bg-gradient-to-r from-plus to-blue-600 text-plus-foreground',
-    pro: 'bg-gradient-to-r from-pro to-purple-600 text-pro-foreground',
-    enterprise: 'bg-gradient-to-r from-primary to-teal-600 text-primary-foreground',
+    pro: 'bg-gradient-to-r from-primary to-teal-600 text-primary-foreground',
   };
 
   return (
@@ -39,9 +35,9 @@ export function TierBadge({ tier, showUpgrade = true, className }: TierBadgeProp
         {tierIcons[displayTier]}
         <span>{info.name}</span>
       </div>
-      {showUpgrade && displayTier !== 'pro' && displayTier !== 'enterprise' && (
+      {showUpgrade && displayTier === 'free' && (
         <button
-          onClick={() => setCurrentTier(displayTier === 'free' ? 'plus' : 'pro')}
+          onClick={() => setCurrentTier('pro')}
           className="text-xs font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
         >
           <Sparkles className="h-3 w-3" />

@@ -11,7 +11,7 @@ interface TierContextType {
 const TierContext = createContext<TierContextType | undefined>(undefined);
 
 export function TierProvider({ children }: { children: ReactNode }) {
-  const [currentTier, setCurrentTier] = useState<SubscriptionTier>('plus');
+  const [currentTier, setCurrentTier] = useState<SubscriptionTier>('free');
   
   const features = tierFeatures[currentTier];
   

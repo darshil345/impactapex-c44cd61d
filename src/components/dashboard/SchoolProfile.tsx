@@ -10,7 +10,7 @@ interface SchoolProfileProps {
 
 export function SchoolProfile({ school, onClose }: SchoolProfileProps) {
   const { currentTier } = useTier();
-  const isPro = currentTier === 'pro' || currentTier === 'enterprise';
+  const isPro = currentTier === 'pro';
 
   if (!school) return null;
 
