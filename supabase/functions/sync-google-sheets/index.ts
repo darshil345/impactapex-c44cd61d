@@ -493,16 +493,54 @@ Deno.serve(async (req) => {
     try {
       const body = await req.json()
       customSheetId = body?.sheetId || null
-      console.log('Custom sheet ID provided:', customSheetId)
+      if (customSheetId) {
+        console.log('Custom sheet ID provided:', customSheetId)
+      }
     } catch {
-      console.log('No custom sheet ID provided')
+      console.log('No body provided in request')
+    }
+
+    // If no sheetId provided, try to get from user's profile using auth token
+    if (!customSheetId) {
+      console.log('No sheetId in body, checking for user profile...')
+      
+      // Try to get user from auth header
+      const authHeader = req.headers.get('authorization')
+      if (authHeader) {
+        const token = authHeader.replace('Bearer ', '')
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+        
+        if (authError) {
+          console.error('Auth error:', authError)
+        } else if (user) {
+          console.log('Found authenticated user:', user.id)
+          
+          // Get user's profile with saved Google Sheets URL
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('google_sheets_url')
+            .eq('id', user.id)
+            .single()
+          
+          if (profileError) {
+            console.error('Profile fetch error:', profileError)
+          } else if (profile?.google_sheets_url) {
+            // Extract sheet ID from URL
+            const urlMatch = profile.google_sheets_url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)
+            if (urlMatch) {
+              customSheetId = urlMatch[1]
+              console.log('Extracted sheet ID from profile:', customSheetId)
+            }
+          }
+        }
+      }
     }
 
     if (!customSheetId) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'No sheet ID provided. Please provide a Google Sheets URL.'
+          error: 'No Google Sheet configured. Please go to Settings to connect your Google Sheet.'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
