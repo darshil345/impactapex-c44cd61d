@@ -6,8 +6,8 @@ import { ScoreChart } from '@/components/dashboard/ScoreChart';
 import { RadarComparison } from '@/components/dashboard/RadarComparison';
 import { InsightEngine } from '@/components/dashboard/InsightEngine';
 import { SchoolProfile } from '@/components/dashboard/SchoolProfile';
-import { TierSelector } from '@/components/dashboard/TierSelector';
 import { Heatmap } from '@/components/dashboard/Heatmap';
+import { QuickStats } from '@/components/dashboard/QuickStats';
 import { School } from '@/lib/mockData';
 import { TierProvider } from '@/contexts/TierContext';
 import { Trophy, TrendingUp, Target, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react';
@@ -196,7 +196,7 @@ function Dashboard() {
         {/* Bottom Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <InsightEngine />
-          <TierSelector />
+          <QuickStats schools={schools} />
         </div>
       </div>
 

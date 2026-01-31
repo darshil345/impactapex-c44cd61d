@@ -1,7 +1,5 @@
 import { useMemo } from 'react';
 import { mockSchools, School } from '@/lib/mockData';
-import { useTier } from '@/contexts/TierContext';
-import { LockedFeature } from '@/components/LockedFeature';
 import { cn } from '@/lib/utils';
 import { Trophy, TrendingUp, TrendingDown, Minus, Medal, ChevronRight } from 'lucide-react';
 
@@ -12,16 +10,13 @@ interface LeaderboardProps {
 }
 
 export function Leaderboard({ onSchoolClick, selectedSchool, schools }: LeaderboardProps) {
-  const { canAccess, features } = useTier();
-  const hasLeaderboard = canAccess('leaderboard');
-
   const dataSource = schools || mockSchools;
 
   const rankedSchools = useMemo(() => {
     return [...dataSource]
       .sort((a, b) => b.avgScore - a.avgScore)
-      .slice(0, hasLeaderboard ? 10 : features.maxSchools);
-  }, [hasLeaderboard, features.maxSchools, dataSource]);
+      .slice(0, 10);
+  }, [dataSource]);
 
   const TrendIcon = ({ trend }: { trend: string }) => {
     if (trend === 'up') return <TrendingUp className="h-3.5 w-3.5 text-primary" />;
@@ -36,7 +31,7 @@ export function Leaderboard({ onSchoolClick, selectedSchool, schools }: Leaderbo
     return <span className="text-sm font-semibold text-muted-foreground w-5 text-center">{rank}</span>;
   };
 
-  const content = (
+  return (
     <div className="bg-card rounded-2xl border shadow-sm overflow-hidden">
       <div className="p-5 border-b">
         <div className="flex items-center justify-between">
@@ -91,16 +86,6 @@ export function Leaderboard({ onSchoolClick, selectedSchool, schools }: Leaderbo
       </div>
     </div>
   );
-
-  if (!hasLeaderboard) {
-    return (
-      <LockedFeature feature="leaderboard" requiredTier="pro">
-        {content}
-      </LockedFeature>
-    );
-  }
-
-  return content;
 }
 
 function getFlagEmoji(countryCode: string): string {
