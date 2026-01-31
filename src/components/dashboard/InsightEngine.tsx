@@ -1,14 +1,8 @@
 import { insights } from '@/lib/mockData';
-import { useTier } from '@/contexts/TierContext';
 import { Lightbulb, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function InsightEngine() {
-  const { currentTier } = useTier();
-  const isPro = currentTier === 'pro';
-  
-  const visibleInsights = isPro ? insights : insights.slice(0, 2);
-
   return (
     <div className="bg-card rounded-2xl border shadow-sm p-5">
       <div className="flex items-center justify-between mb-4">
@@ -21,15 +15,13 @@ export function InsightEngine() {
             <p className="text-xs text-muted-foreground">Auto-generated analysis</p>
           </div>
         </div>
-        {isPro && (
-          <div className="flex items-center gap-1 text-xs text-pro font-medium">
-            <Sparkles className="h-3.5 w-3.5" />
-            Pro Insights
-          </div>
-        )}
+        <div className="flex items-center gap-1 text-xs text-primary font-medium">
+          <Sparkles className="h-3.5 w-3.5" />
+          Smart Analysis
+        </div>
       </div>
       <div className="space-y-3">
-        {visibleInsights.map((insight, index) => (
+        {insights.map((insight, index) => (
           <div
             key={index}
             className={cn(
@@ -43,13 +35,6 @@ export function InsightEngine() {
             <p className="text-foreground leading-relaxed">{insight}</p>
           </div>
         ))}
-        {!isPro && (
-          <div className="p-3 rounded-xl bg-muted/30 border border-dashed border-muted-foreground/20 text-center">
-            <p className="text-xs text-muted-foreground">
-              🔒 Upgrade to Pro for {insights.length - visibleInsights.length} more deep insights
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

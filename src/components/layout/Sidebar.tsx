@@ -61,11 +61,11 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* Tier Badge */}
+      {/* Free Badge */}
       <div className="p-4 mx-3 mb-2 rounded-xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/10">
         <TierBadge />
         <p className="text-[11px] text-muted-foreground mt-2">
-          Switch tiers to explore feature access
+          All features unlocked for free
         </p>
       </div>
 

@@ -1,8 +1,6 @@
 import { useMemo } from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { School, criteria } from '@/lib/mockData';
-import { useTier } from '@/contexts/TierContext';
-import { LockedFeature } from '@/components/LockedFeature';
 
 interface RadarComparisonProps {
   schools: School[];
@@ -11,9 +9,6 @@ interface RadarComparisonProps {
 const COLORS = ['hsl(160 45% 50%)', 'hsl(210 80% 55%)', 'hsl(270 60% 65%)'];
 
 export function RadarComparison({ schools }: RadarComparisonProps) {
-  const { canAccess } = useTier();
-  const hasRadar = canAccess('radarChart');
-
   const chartData = useMemo(() => {
     return criteria.map(criterion => {
       const dataPoint: Record<string, string | number> = {
@@ -30,7 +25,7 @@ export function RadarComparison({ schools }: RadarComparisonProps) {
     });
   }, [schools]);
 
-  const content = (
+  return (
     <div className="bg-card rounded-2xl border shadow-sm p-5">
       <div className="mb-5">
         <h3 className="font-display font-semibold text-lg">School Comparison</h3>
@@ -89,14 +84,4 @@ export function RadarComparison({ schools }: RadarComparisonProps) {
       </div>
     </div>
   );
-
-  if (!hasRadar) {
-    return (
-      <LockedFeature feature="radarChart" requiredTier="pro">
-        {content}
-      </LockedFeature>
-    );
-  }
-
-  return content;
 }

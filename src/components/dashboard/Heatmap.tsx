@@ -1,6 +1,4 @@
 import { School } from '@/lib/mockData';
-import { useTier } from '@/contexts/TierContext';
-import { LockedFeature } from '@/components/LockedFeature';
 import { cn } from '@/lib/utils';
 
 interface HeatmapProps {
@@ -17,16 +15,6 @@ const heatmapCriteria = [
 ] as const;
 
 export function Heatmap({ schools: schoolsProp }: HeatmapProps) {
-  // Safe access to tier context - provide default if not in provider
-  let hasHeatmap = true;
-  try {
-    const { canAccess } = useTier();
-    hasHeatmap = canAccess('heatmap');
-  } catch {
-    // If useTier fails (e.g., during hot reload), default to showing content
-    hasHeatmap = true;
-  }
-
   const getColor = (score: number): string => {
     if (score === 0) return 'bg-muted/50';
     if (score >= 90) return 'bg-primary/80';
@@ -56,7 +44,7 @@ export function Heatmap({ schools: schoolsProp }: HeatmapProps) {
     );
   }
 
-  const content = (
+  return (
     <div className="bg-card rounded-2xl border shadow-sm p-5">
       <div className="mb-5">
         <h3 className="font-display font-semibold text-lg">Performance Heatmap</h3>
@@ -143,14 +131,4 @@ export function Heatmap({ schools: schoolsProp }: HeatmapProps) {
       </div>
     </div>
   );
-
-  if (!hasHeatmap) {
-    return (
-      <LockedFeature feature="heatmap" requiredTier="pro">
-        {content}
-      </LockedFeature>
-    );
-  }
-
-  return content;
 }

@@ -1,6 +1,5 @@
 import { School, criteria } from '@/lib/mockData';
-import { useTier } from '@/contexts/TierContext';
-import { X, MapPin, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, FileText, Lock } from 'lucide-react';
+import { X, MapPin, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, FileText, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SchoolProfileProps {
@@ -9,9 +8,6 @@ interface SchoolProfileProps {
 }
 
 export function SchoolProfile({ school, onClose }: SchoolProfileProps) {
-  const { currentTier } = useTier();
-  const isPro = currentTier === 'pro';
-
   if (!school) return null;
 
   const TrendIcon = school.trend === 'up' ? TrendingUp : school.trend === 'down' ? TrendingDown : Minus;
@@ -110,25 +106,21 @@ export function SchoolProfile({ school, onClose }: SchoolProfileProps) {
             </div>
           </div>
 
-          {/* Evidence (Pro only) */}
+          {/* Evidence Upload */}
           <div>
             <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <FileText className="h-4 w-4 text-pro" />
+              <FileText className="h-4 w-4 text-primary" />
               Evidence & Documents
-              {!isPro && <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
             </h3>
-            {isPro ? (
-              <div className="p-4 rounded-xl border-2 border-dashed border-muted-foreground/20 text-center text-sm text-muted-foreground">
-                No evidence uploaded yet
-              </div>
-            ) : (
-              <div className="p-4 rounded-xl bg-muted/50 text-center">
-                <Lock className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  Upgrade to Pro to view and upload evidence
-                </p>
-              </div>
-            )}
+            <div className="p-4 rounded-xl border-2 border-dashed border-muted-foreground/20 text-center">
+              <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                Drop files here or click to upload evidence
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Supports PDF, images, and documents
+              </p>
+            </div>
           </div>
         </div>
       </div>

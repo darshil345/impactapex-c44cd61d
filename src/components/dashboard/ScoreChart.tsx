@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { mockSchools, criteria, freeCriteria, School } from '@/lib/mockData';
-import { useTier } from '@/contexts/TierContext';
+import { mockSchools, criteria, School } from '@/lib/mockData';
 import { cn } from '@/lib/utils';
 
 interface ScoreChartProps {
@@ -9,15 +8,10 @@ interface ScoreChartProps {
 }
 
 export function ScoreChart({ schools }: ScoreChartProps) {
-  const { canAccess } = useTier();
-  const hasAllCriteria = canAccess('allCriteria');
-
   const dataSource = schools || mockSchools;
 
   const chartData = useMemo(() => {
-    const activeCriteria = hasAllCriteria ? criteria : criteria.filter(c => freeCriteria.includes(c.key));
-    
-    return activeCriteria.map(criterion => {
+    return criteria.map(criterion => {
       const avgScore = dataSource.reduce((acc, school) => {
         return acc + (school[criterion.key as keyof typeof school] as number);
       }, 0) / dataSource.length;
@@ -28,7 +22,7 @@ export function ScoreChart({ schools }: ScoreChartProps) {
         color: criterion.color,
       };
     });
-  }, [hasAllCriteria, dataSource]);
+  }, [dataSource]);
 
   return (
     <div className="bg-card rounded-2xl border shadow-sm p-5">
@@ -68,11 +62,6 @@ export function ScoreChart({ schools }: ScoreChartProps) {
           </BarChart>
         </ResponsiveContainer>
       </div>
-      {!hasAllCriteria && (
-        <p className="text-xs text-muted-foreground mt-4 text-center">
-          🔒 Upgrade to Plus to see all 6 criteria
-        </p>
-      )}
     </div>
   );
 }
