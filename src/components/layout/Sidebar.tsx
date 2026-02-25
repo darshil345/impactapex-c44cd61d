@@ -2,20 +2,18 @@ import { NavLink } from '@/components/NavLink';
 import { TierBadge } from '@/components/TierBadge';
 import { 
   LayoutDashboard, 
-  Trophy, 
   BarChart3, 
-  School, 
   Settings,
   HelpCircle,
-  Sparkles
+  Sparkles,
+  Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
-  { icon: Trophy, label: 'Leaderboard', href: '/leaderboard' },
+  { icon: Plus, label: 'Add Product', href: '/add-product' },
   { icon: BarChart3, label: 'Analytics', href: '/analytics' },
-  { icon: School, label: 'Schools', href: '/schools' },
 ];
 
 const bottomItems = [
@@ -37,7 +35,7 @@ export function Sidebar() {
               Impact<span className="text-primary">ApeX</span>
             </h1>
             <p className="text-[10px] text-muted-foreground tracking-wider uppercase">
-              Measure. Compare. Improve.
+              Research. Compare. Decide.
             </p>
           </div>
         </div>

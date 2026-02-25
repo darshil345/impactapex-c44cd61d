@@ -113,7 +113,7 @@ export default function AuthPage() {
               Impact<span className="text-primary">ApeX</span>
             </h1>
             <p className="text-xs text-muted-foreground tracking-wider uppercase">
-              Measure. Compare. Improve.
+              Research. Compare. Decide.
             </p>
           </div>
         </div>
@@ -126,8 +126,8 @@ export default function AuthPage() {
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
               {isLogin 
-                ? 'Sign in to access your dashboard' 
-                : 'Get started with your impact tracking'}
+                ? 'Sign in to access your product research' 
+                : 'Get started with AI-powered product research'}
             </p>
           </div>
 

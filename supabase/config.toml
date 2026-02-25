@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.settings-assistant]
 verify_jwt = false
+
+[functions.research-product]
+verify_jwt = false
