@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      products: {
+        Row: {
+          ai_summary: string | null
+          brand: string | null
+          category: string | null
+          cons: Json | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          innovation_score: number | null
+          is_recommended: boolean | null
+          name: string | null
+          overall_rating: number | null
+          popularity_score: number | null
+          pros: Json | null
+          quality_score: number | null
+          research_data: Json | null
+          research_status: string | null
+          sustainability_score: number | null
+          updated_at: string
+          url: string
+          user_id: string
+          value_score: number | null
+        }
+        Insert: {
+          ai_summary?: string | null
+          brand?: string | null
+          category?: string | null
+          cons?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          innovation_score?: number | null
+          is_recommended?: boolean | null
+          name?: string | null
+          overall_rating?: number | null
+          popularity_score?: number | null
+          pros?: Json | null
+          quality_score?: number | null
+          research_data?: Json | null
+          research_status?: string | null
+          sustainability_score?: number | null
+          updated_at?: string
+          url: string
+          user_id: string
+          value_score?: number | null
+        }
+        Update: {
+          ai_summary?: string | null
+          brand?: string | null
+          category?: string | null
+          cons?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          innovation_score?: number | null
+          is_recommended?: boolean | null
+          name?: string | null
+          overall_rating?: number | null
+          popularity_score?: number | null
+          pros?: Json | null
+          quality_score?: number | null
+          research_data?: Json | null
+          research_status?: string | null
+          sustainability_score?: number | null
+          updated_at?: string
+          url?: string
+          user_id?: string
+          value_score?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
