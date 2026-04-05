@@ -194,7 +194,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
                   <XCircle className="h-5 w-5" /> Cons
                 </h2>
                 <ul className="space-y-2">
-                  {(product.cons || []).map((con, i) => (
+                  {cons.map((con, i) => (
                     <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
                       <span className="text-red-500 mt-0.5 font-bold">✗</span>
                       {con}
