@@ -24,20 +24,29 @@ serve(async (req) => {
 
     const systemPrompt = `You are an expert product analyst. Given a product URL, provide comprehensive research and analysis. You must respond using the provided tool/function.
 
+CRITICAL RULES:
+- You MUST identify the EXACT product from the URL. Do NOT confuse it with similar products.
+- If the URL contains a specific model name (e.g. "MacBook Pro M3"), research ONLY that exact model — NOT the MacBook Air or any other variant.
+- Pay close attention to model numbers, editions, colors, sizes, and variants in the URL.
+- If the URL points to a specific SKU or variant, analyze THAT specific variant only.
+
 Analyze the product thoroughly considering:
-1. What the product is and who it's for
+1. What the EXACT product is (model, variant, edition) and who it's for
 2. Quality, value, and innovation assessment
-3. Sustainability and environmental impact
+3. Sustainability and environmental impact (SDG alignment)
 4. Market popularity and reputation
 5. Whether users should buy it or not
-6. Pros and cons
-7. Comparison with alternatives
+6. Pros and cons (at least 4-5 each)
+7. Detailed comparison with 3-5 specific alternatives (with model names and why)
+8. UN Sustainable Development Goals (SDGs) relevance — which SDGs does this product support or violate?
 
 Rate each dimension from 0-100.`;
 
-    const userPrompt = `Research this product URL thoroughly: ${url}
-    
-Based on the URL pattern and any knowledge you have about this product/brand, provide a complete analysis. Extract the product name and brand from the URL if possible. Give honest, helpful insights about whether this product is worth buying.`;
+    const userPrompt = `Research this EXACT product URL: ${url}
+
+IMPORTANT: Identify the SPECIFIC product from this URL. Do NOT confuse it with similar products from the same brand. For example, if the URL is for a "MacBook Pro 14-inch M3", do NOT provide analysis for a "MacBook Air" or "MacBook Pro M2". 
+
+Extract the exact product name, model number, and variant from the URL. Provide a complete, honest analysis with detailed alternatives.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
