@@ -24,20 +24,29 @@ serve(async (req) => {
 
     const systemPrompt = `You are an expert product analyst. Given a product URL, provide comprehensive research and analysis. You must respond using the provided tool/function.
 
+CRITICAL RULES:
+- You MUST identify the EXACT product from the URL. Do NOT confuse it with similar products.
+- If the URL contains a specific model name (e.g. "MacBook Pro M3"), research ONLY that exact model — NOT the MacBook Air or any other variant.
+- Pay close attention to model numbers, editions, colors, sizes, and variants in the URL.
+- If the URL points to a specific SKU or variant, analyze THAT specific variant only.
+
 Analyze the product thoroughly considering:
-1. What the product is and who it's for
+1. What the EXACT product is (model, variant, edition) and who it's for
 2. Quality, value, and innovation assessment
-3. Sustainability and environmental impact
+3. Sustainability and environmental impact (SDG alignment)
 4. Market popularity and reputation
 5. Whether users should buy it or not
-6. Pros and cons
-7. Comparison with alternatives
+6. Pros and cons (at least 4-5 each)
+7. Detailed comparison with 3-5 specific alternatives (with model names and why)
+8. UN Sustainable Development Goals (SDGs) relevance — which SDGs does this product support or violate?
 
 Rate each dimension from 0-100.`;
 
-    const userPrompt = `Research this product URL thoroughly: ${url}
-    
-Based on the URL pattern and any knowledge you have about this product/brand, provide a complete analysis. Extract the product name and brand from the URL if possible. Give honest, helpful insights about whether this product is worth buying.`;
+    const userPrompt = `Research this EXACT product URL: ${url}
+
+IMPORTANT: Identify the SPECIFIC product from this URL. Do NOT confuse it with similar products from the same brand. For example, if the URL is for a "MacBook Pro 14-inch M3", do NOT provide analysis for a "MacBook Air" or "MacBook Pro M2". 
+
+Extract the exact product name, model number, and variant from the URL. Provide a complete, honest analysis with detailed alternatives.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -75,9 +84,40 @@ Based on the URL pattern and any knowledge you have about this product/brand, pr
                   popularity_score: { type: "number", description: "Market popularity score 0-100" },
                   is_recommended: { type: "boolean", description: "Whether you recommend this product" },
                   verdict: { type: "string", description: "One-line verdict (e.g. 'Great value for everyday use')" },
-                  alternatives: { type: "string", description: "Brief mention of 2-3 alternatives to consider" },
+                  alternatives: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string", description: "Alternative product name with model" },
+                        price_range: { type: "string", description: "Approximate price range" },
+                        why: { type: "string", description: "Why consider this alternative" },
+                        score: { type: "number", description: "Estimated overall score 0-100" },
+                      },
+                      required: ["name", "why", "score"],
+                    },
+                    description: "3-5 specific alternative products with details",
+                  },
+                  sdg_alignment: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        sdg_number: { type: "number", description: "SDG number (1-17)" },
+                        sdg_name: { type: "string", description: "SDG name" },
+                        impact: { type: "string", enum: ["positive", "negative", "neutral"], description: "How this product impacts this SDG" },
+                        explanation: { type: "string", description: "Brief explanation of the impact" },
+                      },
+                      required: ["sdg_number", "sdg_name", "impact", "explanation"],
+                    },
+                    description: "Relevant UN SDGs and how this product relates to them",
+                  },
+                  target_audience: { type: "string", description: "Who this product is best for" },
+                  best_use_case: { type: "string", description: "The ideal use case for this product" },
+                  durability_estimate: { type: "string", description: "Expected lifespan/durability" },
+                  value_proposition: { type: "string", description: "Core value proposition in one sentence" },
                 },
-                required: ["name", "brand", "category", "description", "ai_summary", "pros", "cons", "overall_rating", "value_score", "quality_score", "innovation_score", "sustainability_score", "popularity_score", "is_recommended", "verdict"],
+                required: ["name", "brand", "category", "description", "ai_summary", "pros", "cons", "overall_rating", "value_score", "quality_score", "innovation_score", "sustainability_score", "popularity_score", "is_recommended", "verdict", "alternatives", "sdg_alignment", "target_audience", "best_use_case"],
                 additionalProperties: false,
               },
             },
@@ -131,7 +171,15 @@ Based on the URL pattern and any knowledge you have about this product/brand, pr
       popularity_score: research.popularity_score,
       is_recommended: research.is_recommended,
       research_status: "completed",
-      research_data: { verdict: research.verdict, alternatives: research.alternatives || "" },
+      research_data: {
+        verdict: research.verdict,
+        alternatives: research.alternatives || [],
+        sdg_alignment: research.sdg_alignment || [],
+        target_audience: research.target_audience || "",
+        best_use_case: research.best_use_case || "",
+        durability_estimate: research.durability_estimate || "",
+        value_proposition: research.value_proposition || "",
+      },
     }).eq("id", productId);
 
     if (updateError) {
