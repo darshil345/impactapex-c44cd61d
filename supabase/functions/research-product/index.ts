@@ -171,7 +171,15 @@ Extract the exact product name, model number, and variant from the URL. Provide 
       popularity_score: research.popularity_score,
       is_recommended: research.is_recommended,
       research_status: "completed",
-      research_data: { verdict: research.verdict, alternatives: research.alternatives || "" },
+      research_data: {
+        verdict: research.verdict,
+        alternatives: research.alternatives || [],
+        sdg_alignment: research.sdg_alignment || [],
+        target_audience: research.target_audience || "",
+        best_use_case: research.best_use_case || "",
+        durability_estimate: research.durability_estimate || "",
+        value_proposition: research.value_proposition || "",
+      },
     }).eq("id", productId);
 
     if (updateError) {
