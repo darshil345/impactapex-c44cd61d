@@ -32,8 +32,12 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
 
   const isResearching = product.research_status === 'pending' || product.research_status === 'researching';
   const data = product.research_data || {};
-  const alternatives = Array.isArray(data.alternatives) ? data.alternatives : [];
+  const rawAlternatives = data.alternatives;
+  const alternatives = Array.isArray(rawAlternatives) ? rawAlternatives : [];
+  const alternativesText = typeof rawAlternatives === 'string' ? rawAlternatives : '';
   const sdgAlignment = Array.isArray(data.sdg_alignment) ? data.sdg_alignment : [];
+  const pros = Array.isArray(product.pros) ? product.pros.map((p: any) => typeof p === 'string' ? p : JSON.stringify(p)) : [];
+  const cons = Array.isArray(product.cons) ? product.cons.map((c: any) => typeof c === 'string' ? c : JSON.stringify(c)) : [];
 
   return (
     <div className="fixed inset-0 z-50 bg-background overflow-y-auto animate-in fade-in duration-200">
