@@ -273,6 +273,14 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
               </div>
             )}
 
+            {/* Fallback for old string-based alternatives */}
+            {alternatives.length === 0 && alternativesText && (
+              <div className="bg-muted/50 rounded-xl p-4">
+                <h3 className="font-semibold text-sm mb-1">Alternatives to Consider</h3>
+                <p className="text-sm text-muted-foreground">{alternativesText}</p>
+              </div>
+            )}
+
             {/* View Original Link */}
             <div className="pb-8">
               <a href={product.url} target="_blank" rel="noopener noreferrer">
