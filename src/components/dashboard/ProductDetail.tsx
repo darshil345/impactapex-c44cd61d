@@ -181,7 +181,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
                   <CheckCircle className="h-5 w-5" /> Pros
                 </h2>
                 <ul className="space-y-2">
-                  {(product.pros || []).map((pro, i) => (
+                  {pros.map((pro, i) => (
                     <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
                       <span className="text-green-500 mt-0.5 font-bold">✓</span>
                       {pro}
