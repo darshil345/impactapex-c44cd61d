@@ -1,27 +1,219 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ImpactApeX - Measure. Compare. Improve.</title>
-    <meta name="description" content="Global K-12 school benchmarking platform. Track sustainability, wellbeing, and community engagement across schools worldwide." />
-    <meta name="author" content="ImpactApeX" />
-    <meta name="keywords" content="school benchmarking, K-12 education, sustainability, wellbeing, global schools, education analytics" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Impact Apex</title>
 
-    <meta property="og:title" content="ImpactApeX - Global School Impact Dashboard" />
-    <meta property="og:description" content="Measure, compare, and improve school performance with real-time global benchmarking." />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@ImpactApeX" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    
-    <link rel="canonical" href="https://impactapex.com" />
-  </head>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+    body {
+      background: #0a0f1c;
+      color: white;
+      overflow-x: hidden;
+    }
+
+    /* NAVBAR */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px 60px;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      background: rgba(10,15,28,0.7);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+    }
+
+    nav h2 {
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    nav a {
+      color: #cbd5e1;
+      margin-left: 25px;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    nav a:hover {
+      color: white;
+    }
+
+    /* HERO */
+    .hero {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 0 20px;
+      text-align: center;
+      background: radial-gradient(circle at top, #1e293b, #020617);
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      max-width: 800px;
+      line-height: 1.2;
+    }
+
+    .hero span {
+      background: linear-gradient(90deg, #22c55e, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: #94a3b8;
+      max-width: 600px;
+    }
+
+    .buttons {
+      margin-top: 30px;
+    }
+
+    .btn {
+      padding: 12px 28px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      margin: 10px;
+      display: inline-block;
+    }
+
+    .primary {
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      color: white;
+    }
+
+    .secondary {
+      border: 1px solid #334155;
+      color: #cbd5e1;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      transition: 0.2s;
+    }
+
+    /* FEATURES */
+    .features {
+      padding: 100px 20px;
+      text-align: center;
+    }
+
+    .features h2 {
+      font-size: 2.5rem;
+      margin-bottom: 40px;
+    }
+
+    .cards {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .card {
+      background: #111827;
+      padding: 25px;
+      width: 280px;
+      border-radius: 16px;
+      transition: 0.3s;
+      border: 1px solid #1f2937;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      border-color: #22c55e;
+    }
+
+    .card h3 {
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      color: #94a3b8;
+    }
+
+    /* FOOTER */
+    footer {
+      padding: 40px;
+      text-align: center;
+      color: #64748b;
+      border-top: 1px solid #1f2937;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<!-- NAV -->
+<nav>
+  <h2>Impact Apex</h2>
+  <div>
+    <a href="#">Home</a>
+    <a href="#features">Features</a>
+    <a href="https://impactapex.lovable.app">App</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <h1>
+    Build the Future with <span>AI Innovation</span>
+  </h1>
+  <p>
+    Impact Apex empowers students to learn, build, and innovate using next-generation AI tools.
+  </p>
+
+  <div class="buttons">
+    <a href="https://impactapex.lovable.app" class="btn primary">Launch App</a>
+    <a href="#features" class="btn secondary">Explore</a>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <h2>What You Get</h2>
+
+  <div class="cards">
+    <div class="card">
+      <h3>AI Tools</h3>
+      <p>Advanced tools to build and experiment with AI models.</p>
+    </div>
+
+    <div class="card">
+      <h3>Smart Dashboard</h3>
+      <p>Track your growth and progress in real-time.</p>
+    </div>
+
+    <div class="card">
+      <h3>Innovation Hub</h3>
+      <p>Create projects that solve real-world problems.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  © 2026 Impact Apex • Built by Darshil 🚀
+</footer>
+
+</body>
 </html>
