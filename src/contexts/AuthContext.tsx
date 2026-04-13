@@ -32,34 +32,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session FIRST
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      }
-      setIsLoading(false);
-    });
+    let initialized = false;
+    let isMounted = true;
 
-    // THEN set up auth state listener for subsequent changes
+    const syncSession = (nextSession: Session | null) => {
+      if (!isMounted) return;
+
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+
+      if (nextSession?.user) {
+        setTimeout(() => {
+          if (isMounted) {
+            fetchProfile(nextSession.user.id);
+          }
+        }, 0);
+      } else {
+        setProfile(null);
+      }
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsLoading(false);
-        
-        if (session?.user) {
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-          }, 0);
-        } else {
-          setProfile(null);
+      (_event, nextSession) => {
+        syncSession(nextSession);
+
+        if (initialized && isMounted) {
+          setIsLoading(false);
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      initialized = true;
+      syncSession(session);
+
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchProfile = async (userId: string) => {
@@ -67,11 +82,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
     
-    if (!error && data) {
-      setProfile(data);
-    }
+    if (error) return;
+
+    setProfile(data ?? null);
   };
 
   const signIn = async (email: string, password: string) => {
