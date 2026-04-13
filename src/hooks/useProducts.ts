@@ -29,7 +29,7 @@ export interface Product {
 }
 
 export function useProducts() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const queryClient = useQueryClient();
 
   const query = useQuery({
@@ -45,12 +45,12 @@ export function useProducts() {
       if (error) throw error;
       return (data || []) as unknown as Product[];
     },
-    enabled: !!user,
+    enabled: !isLoading && !!user,
   });
 
   // Real-time subscription
   useEffect(() => {
-    if (!user) return;
+    if (!user || isLoading) return;
     const channel = supabase
       .channel('products-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
@@ -59,7 +59,7 @@ export function useProducts() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [queryClient, user]);
+  }, [isLoading, queryClient, user]);
 
   return query;
 }
