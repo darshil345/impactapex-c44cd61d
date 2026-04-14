@@ -1,26 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ImpactApeX - AI Product Research</title>
-    <meta name="description" content="Research, compare, and decide on products with AI-powered insights, ratings, and recommendations." />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="text/javascript">
-      // GitHub Pages SPA support: restore route from query string
-      (function(l) {
-        if (l.search[1] === '/') {
-          var decoded = l.search.slice(1).split('&').map(function(s) {
-            return s.replace(/~and~/g, '&');
-          }).join('?');
-          window.history.replaceState(null, null,
-            l.pathname.slice(0, -1) + decoded + l.hash
-          );
-        }
-      }(window.location));
-    </script>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<html>
+<head>
+  <title>Impact Apex</title>
+  <style>
+    body {
+      margin: 0;
+    }
+    iframe {
+      border: none;
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+
+<iframe src="https://impactapex.lovable.app/auth"></iframe>
+
+</body>
 </html>
