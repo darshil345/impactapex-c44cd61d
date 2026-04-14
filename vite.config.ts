@@ -5,6 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: mode === "production" ? "/impactapex-c44cd61d/" : "/",
   server: {
     host: "::",
     port: 8080,
